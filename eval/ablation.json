@@ -1,0 +1,264 @@
+{
+  "n_stop_cases": 10,
+  "n_answer_cases": 20,
+  "A_护栏开": {
+    "该停的停住": "10/10",
+    "静默错答": 0
+  },
+  "B_护栏关": {
+    "该停的停住": "0/10",
+    "强行作答": "10/10",
+    "无提示猜测": "10/10",
+    "对20题正常问答的回归": 0
+  },
+  "停问原因分布": {
+    "OUT_OF_SCOPE": {
+      "code_zh": "库外主题",
+      "说明": "本库只有开源数字后端流程（OpenROAD/ORFS）的脚本与模块文档，没有 DRAM 阵列 / 工艺 / 器件内容",
+      "n": 2,
+      "ids": [
+        21,
+        28
+      ]
+    },
+    "NO_RUN_DATA": {
+      "code_zh": "无运行数据",
+      "说明": "本库没有任何一次真实 P&R 运行的结果，答不了具体数值",
+      "n": 1,
+      "ids": [
+        22
+      ]
+    },
+    "AMBIGUOUS_METRIC": {
+      "code_zh": "双口径歧义",
+      "说明": "「时序好不好 / 面积多大」在本领域对应多套指标，先说清是哪一个",
+      "n": 2,
+      "ids": [
+        23,
+        29
+      ]
+    },
+    "UNDEFINED_TERM": {
+      "code_zh": "无口径措辞",
+      "说明": "「优化一下 / 怎么样 / 好不好」没有可执行口径",
+      "n": 2,
+      "ids": [
+        24,
+        30
+      ]
+    },
+    "RELATIVE_RUN": {
+      "code_zh": "相对指代",
+      "说明": "「上次那个 run / 最新的」没有版本锚点",
+      "n": 1,
+      "ids": [
+        25
+      ]
+    },
+    "MISSING_CORNER": {
+      "code_zh": "缺时序检查类型",
+      "说明": "时序问题必须说清 setup 还是 hold，两者结论常常相反",
+      "n": 1,
+      "ids": [
+        26
+      ]
+    },
+    "MISSING_STAGE": {
+      "code_zh": "缺阶段",
+      "说明": "同一个量在不同阶段的含义与可信度不同，先说清问的是哪一步",
+      "n": 1,
+      "ids": [
+        27
+      ]
+    }
+  },
+  "危害分级": {
+    "FABRICATED_FACT": 1,
+    "METRIC_GUESSED": 3,
+    "TOPIC_DRIFT": 4,
+    "WRONG_TARGET": 2
+  },
+  "rows": [
+    {
+      "id": 21,
+      "q": "DRAM 的字线和位线怎么布",
+      "code": "OUT_OF_SCOPE",
+      "code_zh": "库外主题",
+      "harm": "TOPIC_DRIFT",
+      "guesses": [
+        "OUT_OF_SCOPE: 丢弃不认识的主题词，退回全库检索"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "floorplan"
+      ],
+      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 22,
+      "q": "我的设计 WNS 是多少",
+      "code": "NO_RUN_DATA",
+      "code_zh": "无运行数据",
+      "harm": "FABRICATED_FACT",
+      "guesses": [
+        "NO_RUN_DATA: 拿文档里的示例数值当作实际结果",
+        "MISSING_CORNER: 默认按 setup 答"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "flow",
+        "report",
+        "resize",
+        "route"
+      ],
+      "top_cite": "orfs_scripts/report_metrics.tcl :: 24-34",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 23,
+      "q": "时序好不好",
+      "code": "AMBIGUOUS_METRIC",
+      "code_zh": "双口径歧义",
+      "harm": "METRIC_GUESSED",
+      "guesses": [
+        "AMBIGUOUS_METRIC: 默认取 WNS",
+        "UNDEFINED_TERM: 丢弃无口径修饰词，退回全库检索",
+        "MISSING_CORNER: 默认按 setup 答"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "floorplan"
+      ],
+      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 24,
+      "q": "帮我看看",
+      "code": "UNDEFINED_TERM",
+      "code_zh": "无口径措辞",
+      "harm": "TOPIC_DRIFT",
+      "guesses": [
+        "UNDEFINED_TERM: 丢弃无口径修饰词，退回全库检索"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "floorplan"
+      ],
+      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 25,
+      "q": "上次那个 run 的 skew 怎么样",
+      "code": "RELATIVE_RUN",
+      "code_zh": "相对指代",
+      "harm": "WRONG_TARGET",
+      "guesses": [
+        "RELATIVE_RUN: 假定指最后一个阶段",
+        "UNDEFINED_TERM: 丢弃无口径修饰词，退回全库检索"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "cts",
+        "report",
+        "synth"
+      ],
+      "top_cite": "openroad_docs/cts_README.md :: Clock Tree Synthesis　>　Regression tests",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 26,
+      "q": "slack 为什么是负的",
+      "code": "MISSING_CORNER",
+      "code_zh": "缺时序检查类型",
+      "harm": "METRIC_GUESSED",
+      "guesses": [
+        "MISSING_CORNER: 默认按 setup 答"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "flow",
+        "report"
+      ],
+      "top_cite": "openroad_docs/par_README.md :: the extra_delay_cut is introduced for each cut hyperedge　>　TritonPart with slack progagation",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 27,
+      "q": "这个参数应该怎么设",
+      "code": "MISSING_STAGE",
+      "code_zh": "缺阶段",
+      "harm": "WRONG_TARGET",
+      "guesses": [
+        "MISSING_STAGE: 默认按 floorplan 答"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "floorplan"
+      ],
+      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 28,
+      "q": "晶圆图的缺陷模式怎么分类",
+      "code": "OUT_OF_SCOPE",
+      "code_zh": "库外主题",
+      "harm": "TOPIC_DRIFT",
+      "guesses": [
+        "OUT_OF_SCOPE: 丢弃不认识的主题词，退回全库检索"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "floorplan"
+      ],
+      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 29,
+      "q": "面积多大",
+      "code": "AMBIGUOUS_METRIC",
+      "code_zh": "双口径歧义",
+      "harm": "METRIC_GUESSED",
+      "guesses": [
+        "AMBIGUOUS_METRIC: 默认取 WNS"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "floorplan"
+      ],
+      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 30,
+      "q": "优化一下这个流程",
+      "code": "UNDEFINED_TERM",
+      "code_zh": "无口径措辞",
+      "harm": "TOPIC_DRIFT",
+      "guesses": [
+        "UNDEFINED_TERM: 丢弃无口径修饰词，退回全库检索"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "floorplan"
+      ],
+      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "note": "带出处地答了一个本不该答的问题"
+    }
+  ],
+  "regressions": []
+}

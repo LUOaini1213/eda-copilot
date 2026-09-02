@@ -1,0 +1,92 @@
+{
+  "bm25": {
+    "mode": "bm25",
+    "k": 5,
+    "n_retrieval": 20,
+    "n_stop": 10,
+    "hit_at_k": "19/20",
+    "hit_rate": 0.95,
+    "mrr": 0.7892,
+    "stop_caught": "10/10",
+    "stop_code_correct": "10/10",
+    "retrieval_misses": [
+      {
+        "id": 16,
+        "q": "odb 数据库怎么读写",
+        "got": [
+          "orfs_scripts/flow.tcl",
+          "orfs_scripts/flow.tcl",
+          "orfs_scripts/flow.tcl"
+        ],
+        "want": [
+          "openroad_docs/odb_README.md"
+        ]
+      }
+    ],
+    "stop_misses": []
+  },
+  "tfidf": {
+    "mode": "tfidf",
+    "k": 5,
+    "n_retrieval": 20,
+    "n_stop": 10,
+    "hit_at_k": "18/20",
+    "hit_rate": 0.9,
+    "mrr": 0.7475,
+    "stop_caught": "10/10",
+    "stop_code_correct": "10/10",
+    "retrieval_misses": [
+      {
+        "id": 7,
+        "q": "report_metrics 会报告哪些时序指标",
+        "got": [
+          "orfs_scripts/global_route.tcl",
+          "orfs_scripts/cts.tcl",
+          "orfs_scripts/cts.tcl"
+        ],
+        "want": [
+          "orfs_scripts/report_metrics.tcl"
+        ]
+      },
+      {
+        "id": 16,
+        "q": "odb 数据库怎么读写",
+        "got": [
+          "orfs_scripts/resize.tcl",
+          "orfs_scripts/flow.tcl",
+          "orfs_scripts/flow.tcl"
+        ],
+        "want": [
+          "openroad_docs/odb_README.md"
+        ]
+      }
+    ],
+    "stop_misses": []
+  },
+  "hybrid": {
+    "mode": "hybrid",
+    "k": 5,
+    "n_retrieval": 20,
+    "n_stop": 10,
+    "hit_at_k": "19/20",
+    "hit_rate": 0.95,
+    "mrr": 0.77,
+    "stop_caught": "10/10",
+    "stop_code_correct": "10/10",
+    "retrieval_misses": [
+      {
+        "id": 16,
+        "q": "odb 数据库怎么读写",
+        "got": [
+          "orfs_scripts/flow.tcl",
+          "orfs_scripts/flow.tcl",
+          "orfs_scripts/flow.tcl"
+        ],
+        "want": [
+          "openroad_docs/odb_README.md"
+        ]
+      }
+    ],
+    "stop_misses": []
+  }
+}
