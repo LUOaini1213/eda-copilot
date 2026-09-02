@@ -45,6 +45,26 @@ _RUN_STAGE_PREFIX = [
 ]
 
 
+# 每个阶段的日志开头都有一份一模一样的 OpenROAD 版本横幅 + 许可证 + 读库命令。
+# 这种样板块在所有阶段重复出现，对任何查询都「有点像」，会挤掉真正有内容的块。
+# 这不是为了刷指标去删难题，是在删语料噪声。
+_BOILERPLATE = (
+    "This program is licensed under the BSD-3 license",
+    "Features included (+) or not (-)",
+    "[INFO ODB-0227]",
+)
+
+
+def _is_boilerplate(text: str) -> bool:
+    t = text.strip()
+    if not t:
+        return True
+    if any(b in t for b in _BOILERPLATE):
+        # 只有当这一块几乎全是样板（没有实质指标行）时才丢
+        return not any(c in t for c in ("tns", "wns", "slack", "skew", "violation", "= "))
+    return False
+
+
 def _stage_from_run_name(name: str) -> str:
     for pre, st in _RUN_STAGE_PREFIX:
         if name.startswith(pre):
@@ -114,6 +134,8 @@ def load_documents() -> list[Document]:
             rel = f"{sub}/{fp.name}"
             if kind == "run":
                 for a, b, body in _split_tcl(text, max_lines=30):
+                    if _is_boilerplate(body):
+                        continue
                     docs.append(Document(page_content=body, metadata={
                         "source": rel, "kind": kind, "stage": stage,
                         "run": RUN_ID, "lines": f"{a}-{b}"}))

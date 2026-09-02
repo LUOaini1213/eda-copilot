@@ -275,8 +275,8 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "report",
-        "route"
+        "place",
+        "report"
       ],
       "top_cite": "run_nangate45_gcd/6_finish.rpt :: 2-10",
       "note": "带出处地答了一个本不该答的问题"
@@ -293,6 +293,7 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
+        "place",
         "report",
         "route"
       ],
