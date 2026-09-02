@@ -16,11 +16,11 @@ from .retrieve import Retriever
 
 
 @lru_cache(maxsize=4)
-def _retriever(mode: str = "bm25") -> Retriever:
+def _retriever(mode: str = "hybrid") -> Retriever:
     return Retriever(load_documents(), mode=mode)
 
 
-def ask(question: str, k: int = 4, mode: str = "bm25", force: bool = False) -> dict:
+def ask(question: str, k: int = 4, mode: str = "hybrid", force: bool = False) -> dict:
     it = parse(question, force=force)
     out: dict = {
         "question": question,
@@ -39,7 +39,9 @@ def ask(question: str, k: int = 4, mode: str = "bm25", force: bool = False) -> d
         out["answer"] = f"[停下来问人 · {zh}] {it.hitl_reason}"
         return out
 
-    hits = _retriever(mode).search(question, k=k, stage=it.stage)
+    # guard 已经判过这是「问本次 run 的数值」还是「问文档」，直接复用，不重复判一遍
+    prefer = "run" if any(n.startswith("run=") for n in it.notes) else None
+    hits = _retriever(mode).search(question, k=k, stage=it.stage, prefer_kind=prefer)
     out["hits"] = [{"cite": h.cite, "stage": h.doc.metadata.get("stage"),
                     "kind": h.doc.metadata.get("kind"), "score": round(h.score, 5),
                     "text": h.doc.page_content} for h in hits]

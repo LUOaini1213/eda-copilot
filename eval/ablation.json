@@ -1,14 +1,14 @@
 {
-  "n_stop_cases": 10,
-  "n_answer_cases": 20,
+  "n_stop_cases": 12,
+  "n_answer_cases": 23,
   "A_护栏开": {
-    "该停的停住": "10/10",
+    "该停的停住": "12/12",
     "静默错答": 0
   },
   "B_护栏关": {
-    "该停的停住": "0/10",
-    "强行作答": "10/10",
-    "无提示猜测": "10/10",
+    "该停的停住": "0/12",
+    "强行作答": "12/12",
+    "无提示猜测": "12/12",
     "对20题正常问答的回归": 0
   },
   "停问原因分布": {
@@ -21,12 +21,13 @@
         28
       ]
     },
-    "NO_RUN_DATA": {
-      "code_zh": "无运行数据",
-      "说明": "本库没有任何一次真实 P&R 运行的结果，答不了具体数值",
-      "n": 1,
+    "RUN_OUT_OF_SCOPE": {
+      "code_zh": "运行不在库内",
+      "说明": "本库只有 nangate45/gcd base 这一次真实运行，别的设计 / 别的 run 答不了",
+      "n": 2,
       "ids": [
-        22
+        22,
+        33
       ]
     },
     "AMBIGUOUS_METRIC": {
@@ -58,9 +59,10 @@
     "MISSING_CORNER": {
       "code_zh": "缺时序检查类型",
       "说明": "时序问题必须说清 setup 还是 hold，两者结论常常相反",
-      "n": 1,
+      "n": 2,
       "ids": [
-        26
+        26,
+        35
       ]
     },
     "MISSING_STAGE": {
@@ -73,9 +75,9 @@
     }
   },
   "危害分级": {
-    "FABRICATED_FACT": 1,
-    "METRIC_GUESSED": 3,
+    "METRIC_GUESSED": 4,
     "TOPIC_DRIFT": 4,
+    "UNKNOWN": 2,
     "WRONG_TARGET": 2
   },
   "rows": [
@@ -91,30 +93,29 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "floorplan"
+        "report"
       ],
-      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "top_cite": "run_nangate45_gcd/6_report.log :: 61-71",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
       "id": 22,
       "q": "我的设计 WNS 是多少",
-      "code": "NO_RUN_DATA",
-      "code_zh": "无运行数据",
-      "harm": "FABRICATED_FACT",
+      "code": "RUN_OUT_OF_SCOPE",
+      "code_zh": "运行不在库内",
+      "harm": "UNKNOWN",
       "guesses": [
-        "NO_RUN_DATA: 拿文档里的示例数值当作实际结果",
+        "RUN_OUT_OF_SCOPE: 拿本库唯一那次 run 的数值当成你问的那次",
         "MISSING_CORNER: 默认按 setup 答"
       ],
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "flow",
+        "place",
         "report",
-        "resize",
         "route"
       ],
-      "top_cite": "orfs_scripts/report_metrics.tcl :: 24-34",
+      "top_cite": "run_nangate45_gcd/6_finish.rpt :: 2-10",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
@@ -131,9 +132,9 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "floorplan"
+        "report"
       ],
-      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "top_cite": "run_nangate45_gcd/6_report.log :: 61-71",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
@@ -148,9 +149,9 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "floorplan"
+        "report"
       ],
-      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "top_cite": "run_nangate45_gcd/6_report.log :: 61-71",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
@@ -168,9 +169,9 @@
       "cited_stages": [
         "cts",
         "report",
-        "synth"
+        "route"
       ],
-      "top_cite": "openroad_docs/cts_README.md :: Clock Tree Synthesis　>　Regression tests",
+      "top_cite": "run_nangate45_gcd/4_cts_final.rpt :: 23-31",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
@@ -186,7 +187,9 @@
       "n_hits": 4,
       "cited_stages": [
         "flow",
-        "report"
+        "place",
+        "report",
+        "route"
       ],
       "top_cite": "openroad_docs/par_README.md :: the extra_delay_cut is introduced for each cut hyperedge　>　TritonPart with slack progagation",
       "note": "带出处地答了一个本不该答的问题"
@@ -203,9 +206,9 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "floorplan"
+        "report"
       ],
-      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "top_cite": "run_nangate45_gcd/6_report.log :: 61-71",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
@@ -220,9 +223,9 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "floorplan"
+        "report"
       ],
-      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "top_cite": "run_nangate45_gcd/6_report.log :: 61-71",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
@@ -237,9 +240,9 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "floorplan"
+        "report"
       ],
-      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "top_cite": "run_nangate45_gcd/6_report.log :: 61-71",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
@@ -254,9 +257,46 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "floorplan"
+        "report"
       ],
-      "top_cite": "openroad_docs/tap_README.md :: Tapcell　>　License",
+      "top_cite": "run_nangate45_gcd/6_report.log :: 61-71",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 33,
+      "q": "ibex 的 tns 是多少",
+      "code": "RUN_OUT_OF_SCOPE",
+      "code_zh": "运行不在库内",
+      "harm": "UNKNOWN",
+      "guesses": [
+        "RUN_OUT_OF_SCOPE: 拿本库唯一那次 run 的数值当成你问的那次",
+        "MISSING_CORNER: 默认按 setup 答"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "report",
+        "route"
+      ],
+      "top_cite": "run_nangate45_gcd/6_finish.rpt :: 2-10",
+      "note": "带出处地答了一个本不该答的问题"
+    },
+    {
+      "id": 35,
+      "q": "gcd 这次 run 的 tns 是多少",
+      "code": "MISSING_CORNER",
+      "code_zh": "缺时序检查类型",
+      "harm": "METRIC_GUESSED",
+      "guesses": [
+        "MISSING_CORNER: 默认按 setup 答"
+      ],
+      "answered": true,
+      "n_hits": 4,
+      "cited_stages": [
+        "report",
+        "route"
+      ],
+      "top_cite": "run_nangate45_gcd/6_finish.rpt :: 2-10",
       "note": "带出处地答了一个本不该答的问题"
     }
   ],

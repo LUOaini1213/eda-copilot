@@ -25,7 +25,7 @@ STAGES = {
 
 HITL_CODES = {
     "OUT_OF_SCOPE": ("库外主题", "本库只有开源数字后端流程（OpenROAD/ORFS）的脚本与模块文档，没有 DRAM 阵列 / 工艺 / 器件内容"),
-    "NO_RUN_DATA": ("无运行数据", "本库没有任何一次真实 P&R 运行的结果，答不了具体数值"),
+    "RUN_OUT_OF_SCOPE": ("运行不在库内", "本库只有 nangate45/gcd base 这一次真实运行，别的设计 / 别的 run 答不了"),
     "AMBIGUOUS_METRIC": ("双口径歧义", "「时序好不好 / 面积多大」在本领域对应多套指标，先说清是哪一个"),
     "MISSING_CORNER": ("缺时序检查类型", "时序问题必须说清 setup 还是 hold，两者结论常常相反"),
     "MISSING_STAGE": ("缺阶段", "同一个量在不同阶段的含义与可信度不同，先说清问的是哪一步"),
@@ -35,7 +35,7 @@ HITL_CODES = {
 
 FORCED_DEFAULT = {
     "OUT_OF_SCOPE": "丢弃不认识的主题词，退回全库检索",
-    "NO_RUN_DATA": "拿文档里的示例数值当作实际结果",
+    "RUN_OUT_OF_SCOPE": "拿本库唯一那次 run 的数值当成你问的那次",
     "AMBIGUOUS_METRIC": "默认取 WNS",
     "MISSING_CORNER": "默认按 setup 答",
     "MISSING_STAGE": "默认按 floorplan 答",
@@ -70,6 +70,11 @@ _NEEDS_RUN = re.compile(
     r"(我的|这个|本|该)?\s*(设计|design|run|跑的?)\s*.*(是多少|多少|结果|数值)|"
     r"(wns|tns|slack|skew|drc|面积|利用率)\s*(是)?\s*多少|"
     r"跑出来|实际(结果|数值)|report 里(写|是)什么", re.I)
+
+# 本库唯一收录的运行
+KNOWN_RUN = re.compile(r"gcd|nangate45", re.I)
+# 明显是别的设计
+OTHER_DESIGN = re.compile(r"我的设计|我这个设计|aes|ibex|jpeg|swerv|ariane|riscv|black\s*parrot|asap7", re.I)
 
 _RELATIVE = re.compile(r"上次|上一次|最新的?那?个?\s*run|刚才那个|之前那个|last run|latest run", re.I)
 
@@ -119,9 +124,15 @@ def parse(question: str, force: bool = False) -> Intent:
         if guard("RELATIVE_RUN", "本库不保存运行历史。请直接说阶段与指标名。"):
             return it
 
+    # 问具体数值：本库有且只有 nangate45/gcd base 这一次运行。
+    # 问的是这次 -> 可以答；问的是别的设计 / 没指明是哪次 -> 停。
     if _NEEDS_RUN.search(q):
-        if guard("NO_RUN_DATA", "本库只有脚本与文档，**没有跑过任何一次 P&R**，给不出你这个设计的实际数值。"):
-            return it
+        if OTHER_DESIGN.search(q) or not KNOWN_RUN.search(q):
+            if guard("RUN_OUT_OF_SCOPE",
+                     "本库只收录了 **nangate45/gcd base** 这一次真实运行（跑到 6_final.gds）。"
+                     "要问数值，请指明是这次运行；别的设计本库没有数据。"):
+                return it
+        it.notes.append("run=nangate45/gcd base")
 
     if _AMBIG_METRIC.search(q):
         if guard("AMBIGUOUS_METRIC", "时序至少有 WNS / TNS / worst slack 三套；面积至少有 die area / core area / utilization 三套。请指定。"):

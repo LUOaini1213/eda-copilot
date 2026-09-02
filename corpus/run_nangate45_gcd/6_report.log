@@ -1,0 +1,71 @@
+OpenROAD 26Q3-1836-g39a75ec608 
+Features included (+) or not (-): +GPU +GUI +Python
+This program is licensed under the BSD-3 license. See the LICENSE file for details.
+Components of this program may be licensed under more restrictive licenses which must be honored.
+[INFO ORD-0030] Using 8 thread(s).
+read_liberty /OpenROAD-flow-scripts/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib
+read_db ./results/nangate45/gcd/base/6_1_fill.odb
+read_sdc ./results/nangate45/gcd/base/6_1_fill.sdc
+source /OpenROAD-flow-scripts/flow/platforms/nangate45/setRC.tcl
+[WARNING STA-0450] virtual clock vclk_core_clock can not be propagated.
+write_db ./results/nangate45/gcd/base/6_final.odb
+write_sdc -no_timestamp ./results/nangate45/gcd/base/6_final.sdc
+Deleted 0 routing obstructions
+[INFO RCX-0431] Defined process_corner X with ext_model_index 0
+[INFO RCX-0029] Defined extraction corner X
+[INFO RCX-0435] Reading extraction model file /OpenROAD-flow-scripts/flow/platforms/nangate45/rcx_patterns.rules ...
+[INFO RCX-0436] RC segment generation gcd (max_merge_res 50.0) ...
+[INFO RCX-0040] Final 1844 rc segments
+[INFO RCX-0439] Coupling Cap extraction gcd ...
+[INFO RCX-0440] Coupling threshhold is 0.1000 fF, coupling capacitance less than 0.1000 fF will be grounded.
+[INFO RCX-0442] 48% of 3601 wires extracted
+[INFO RCX-0442] 100% of 3601 wires extracted
+[INFO RCX-0045] Extract 759 nets, 2584 rsegs, 2584 caps, 5353 ccs
+[INFO RCX-0443] 759 nets finished
+[INFO PSM-0040] All shapes on net VDD are connected.
+[INFO PSM-0073] Using bump pattern with x-pitch 140.0000um, y-pitch 140.0000um, and size 70.0000um with an reduction factor of 3x.
+########## IR report #################
+Net              : VDD
+Corner           : default
+Total power      : 6.38e-03 W
+Supply voltage   : 1.10e+00 V
+Worstcase voltage: 1.09e+00 V
+Average voltage  : 1.09e+00 V
+Average IR drop  : 5.02e-03 V
+Worstcase IR drop: 1.03e-02 V
+Percentage drop  : 0.94 %
+######################################
+[INFO PSM-0040] All shapes on net VSS are connected.
+[INFO PSM-0073] Using bump pattern with x-pitch 140.0000um, y-pitch 140.0000um, and size 70.0000um with an reduction factor of 3x.
+########## IR report #################
+Net              : VSS
+Corner           : default
+Total power      : 6.38e-03 W
+Supply voltage   : 0.00e+00 V
+Worstcase voltage: 7.51e-03 V
+Average voltage  : 4.12e-03 V
+Average IR drop  : 4.12e-03 V
+Worstcase IR drop: 7.51e-03 V
+Percentage drop  : 0.68 %
+######################################
+Cell type report:                       Count       Area
+  Fill cell                               249     129.01
+  Tap cell                                 46      12.24
+  Clock buffer                              7       8.25
+  Timing Repair Buffer                    184     176.89
+  Inverter                                 86      63.84
+  Clock inverter                            1       0.80
+  Timing Repair inverter                    1       2.39
+  Sequential cell                          35     158.27
+  Multi-Input combinational cell          377     525.08
+  Total                                   986    1076.77
+Report metrics stage 6, finish...
+
+==========================================================================
+finish report_design_area
+--------------------------------------------------------------------------
+Design area 948 um^2 88% utilization.
+[WARNING GUI-0076] QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'
+Elapsed time: 0:02.25[h:]min:sec. CPU time: user 2.20 sys 0.22 (107%). Peak memory: 185632KB.
+Log                       Ext     Elapsed/s Peak Memory/MB sha1sum result [0:20)
+6_report                                  2            181                  N/A

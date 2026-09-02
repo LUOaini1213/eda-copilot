@@ -1,32 +1,249 @@
 [
-{"id":1,"q":"cts 的 sink clustering 是干什么的","expect_source":["orfs_scripts/cts.tcl","openroad_docs/cts_README.md"]},
-{"id":2,"q":"floorplan 有哪几种初始化方式","expect_source":["orfs_scripts/floorplan.tcl"]},
-{"id":3,"q":"CORE_UTILIZATION 这个变量怎么用","expect_source":["orfs_scripts/floorplan.tcl"]},
-{"id":4,"q":"set_global_routing_layer_adjustment 是什么意思","expect_source":["orfs_scripts/floorplan.tcl","openroad_docs/grt_README.md"]},
-{"id":5,"q":"detail route 用哪个命令跑","expect_source":["orfs_scripts/detail_route.tcl","openroad_docs/drt_README.md"]},
-{"id":6,"q":"repair_timing 的 sequence 有哪些取值","expect_source":["orfs_scripts/floorplan.tcl","openroad_docs/rsz_README.md"]},
-{"id":7,"q":"report_metrics 会报告哪些时序指标","expect_source":["orfs_scripts/report_metrics.tcl"]},
-{"id":8,"q":"global placement 的 density 参数怎么理解","expect_source":["openroad_docs/gpl_README.md","orfs_scripts/global_place.tcl"]},
-{"id":9,"q":"detailed placement 的 legalization 怎么做","expect_source":["openroad_docs/dpl_README.md","orfs_scripts/detail_place.tcl"]},
-{"id":10,"q":"io pin placement 用什么命令","expect_source":["openroad_docs/ppl_README.md","orfs_scripts/io_placement.tcl"]},
-{"id":11,"q":"macro placement 用的什么算法","expect_source":["openroad_docs/mpl_README.md","orfs_scripts/macro_place_util.tcl"]},
-{"id":12,"q":"power delivery network 的 grid 怎么定义","expect_source":["openroad_docs/pdn_README.md"]},
-{"id":13,"q":"tapcell 是干什么用的","expect_source":["openroad_docs/tap_README.md"]},
-{"id":14,"q":"partitioning 用的是什么方法","expect_source":["openroad_docs/par_README.md"]},
-{"id":15,"q":"steiner tree 在哪个模块实现","expect_source":["openroad_docs/stt_README.md"]},
-{"id":16,"q":"odb 数据库怎么读写","expect_source":["openroad_docs/odb_README.md"]},
-{"id":17,"q":"initialize_floorplan 命令有哪些参数","expect_source":["openroad_docs/ifp_README.md","orfs_scripts/floorplan.tcl"]},
-{"id":18,"q":"为什么 repair_tie_fanout 要放在 floorplan 之后而不是综合阶段","expect_source":["orfs_scripts/floorplan.tcl"]},
-{"id":19,"q":"remove_buffers 在什么条件下执行","expect_source":["orfs_scripts/floorplan.tcl"]},
-{"id":20,"q":"make_tracks 是做什么的","expect_source":["orfs_scripts/floorplan.tcl"]},
-{"id":21,"q":"DRAM 的字线和位线怎么布","expect_hitl":true,"expect_code":"OUT_OF_SCOPE"},
-{"id":22,"q":"我的设计 WNS 是多少","expect_hitl":true,"expect_code":"NO_RUN_DATA"},
-{"id":23,"q":"时序好不好","expect_hitl":true,"expect_code":"AMBIGUOUS_METRIC"},
-{"id":24,"q":"帮我看看","expect_hitl":true,"expect_code":"UNDEFINED_TERM"},
-{"id":25,"q":"上次那个 run 的 skew 怎么样","expect_hitl":true,"expect_code":"RELATIVE_RUN"},
-{"id":26,"q":"slack 为什么是负的","expect_hitl":true,"expect_code":"MISSING_CORNER"},
-{"id":27,"q":"这个参数应该怎么设","expect_hitl":true,"expect_code":"MISSING_STAGE"},
-{"id":28,"q":"晶圆图的缺陷模式怎么分类","expect_hitl":true,"expect_code":"OUT_OF_SCOPE"},
-{"id":29,"q":"面积多大","expect_hitl":true,"expect_code":"AMBIGUOUS_METRIC"},
-{"id":30,"q":"优化一下这个流程","expect_hitl":true,"expect_code":"UNDEFINED_TERM"}
+ {
+  "id": 1,
+  "q": "cts 的 sink clustering 是干什么的",
+  "expect_source": [
+   "orfs_scripts/cts.tcl",
+   "openroad_docs/cts_README.md"
+  ]
+ },
+ {
+  "id": 2,
+  "q": "floorplan 有哪几种初始化方式",
+  "expect_source": [
+   "orfs_scripts/floorplan.tcl"
+  ]
+ },
+ {
+  "id": 3,
+  "q": "CORE_UTILIZATION 这个变量怎么用",
+  "expect_source": [
+   "orfs_scripts/floorplan.tcl"
+  ]
+ },
+ {
+  "id": 4,
+  "q": "set_global_routing_layer_adjustment 是什么意思",
+  "expect_source": [
+   "orfs_scripts/floorplan.tcl",
+   "openroad_docs/grt_README.md"
+  ]
+ },
+ {
+  "id": 5,
+  "q": "detail route 用哪个命令跑",
+  "expect_source": [
+   "orfs_scripts/detail_route.tcl",
+   "openroad_docs/drt_README.md"
+  ]
+ },
+ {
+  "id": 6,
+  "q": "repair_timing 的 sequence 有哪些取值",
+  "expect_source": [
+   "orfs_scripts/floorplan.tcl",
+   "openroad_docs/rsz_README.md"
+  ]
+ },
+ {
+  "id": 7,
+  "q": "report_metrics 会报告哪些时序指标",
+  "expect_source": [
+   "orfs_scripts/report_metrics.tcl"
+  ]
+ },
+ {
+  "id": 8,
+  "q": "global placement 的 density 参数怎么理解",
+  "expect_source": [
+   "openroad_docs/gpl_README.md",
+   "orfs_scripts/global_place.tcl"
+  ]
+ },
+ {
+  "id": 9,
+  "q": "detailed placement 的 legalization 怎么做",
+  "expect_source": [
+   "openroad_docs/dpl_README.md",
+   "orfs_scripts/detail_place.tcl"
+  ]
+ },
+ {
+  "id": 10,
+  "q": "io pin placement 用什么命令",
+  "expect_source": [
+   "openroad_docs/ppl_README.md",
+   "orfs_scripts/io_placement.tcl"
+  ]
+ },
+ {
+  "id": 11,
+  "q": "macro placement 用的什么算法",
+  "expect_source": [
+   "openroad_docs/mpl_README.md",
+   "orfs_scripts/macro_place_util.tcl"
+  ]
+ },
+ {
+  "id": 12,
+  "q": "power delivery network 的 grid 怎么定义",
+  "expect_source": [
+   "openroad_docs/pdn_README.md"
+  ]
+ },
+ {
+  "id": 13,
+  "q": "tapcell 是干什么用的",
+  "expect_source": [
+   "openroad_docs/tap_README.md"
+  ]
+ },
+ {
+  "id": 14,
+  "q": "partitioning 用的是什么方法",
+  "expect_source": [
+   "openroad_docs/par_README.md"
+  ]
+ },
+ {
+  "id": 15,
+  "q": "steiner tree 在哪个模块实现",
+  "expect_source": [
+   "openroad_docs/stt_README.md"
+  ]
+ },
+ {
+  "id": 16,
+  "q": "odb 数据库怎么读写",
+  "expect_source": [
+   "openroad_docs/odb_README.md"
+  ]
+ },
+ {
+  "id": 17,
+  "q": "initialize_floorplan 命令有哪些参数",
+  "expect_source": [
+   "openroad_docs/ifp_README.md",
+   "orfs_scripts/floorplan.tcl"
+  ]
+ },
+ {
+  "id": 18,
+  "q": "为什么 repair_tie_fanout 要放在 floorplan 之后而不是综合阶段",
+  "expect_source": [
+   "orfs_scripts/floorplan.tcl"
+  ]
+ },
+ {
+  "id": 19,
+  "q": "remove_buffers 在什么条件下执行",
+  "expect_source": [
+   "orfs_scripts/floorplan.tcl"
+  ]
+ },
+ {
+  "id": 20,
+  "q": "make_tracks 是做什么的",
+  "expect_source": [
+   "orfs_scripts/floorplan.tcl"
+  ]
+ },
+ {
+  "id": 21,
+  "q": "DRAM 的字线和位线怎么布",
+  "expect_hitl": true,
+  "expect_code": "OUT_OF_SCOPE"
+ },
+ {
+  "id": 22,
+  "q": "我的设计 WNS 是多少",
+  "expect_hitl": true,
+  "expect_code": "RUN_OUT_OF_SCOPE"
+ },
+ {
+  "id": 23,
+  "q": "时序好不好",
+  "expect_hitl": true,
+  "expect_code": "AMBIGUOUS_METRIC"
+ },
+ {
+  "id": 24,
+  "q": "帮我看看",
+  "expect_hitl": true,
+  "expect_code": "UNDEFINED_TERM"
+ },
+ {
+  "id": 25,
+  "q": "上次那个 run 的 skew 怎么样",
+  "expect_hitl": true,
+  "expect_code": "RELATIVE_RUN"
+ },
+ {
+  "id": 26,
+  "q": "slack 为什么是负的",
+  "expect_hitl": true,
+  "expect_code": "MISSING_CORNER"
+ },
+ {
+  "id": 27,
+  "q": "这个参数应该怎么设",
+  "expect_hitl": true,
+  "expect_code": "MISSING_STAGE"
+ },
+ {
+  "id": 28,
+  "q": "晶圆图的缺陷模式怎么分类",
+  "expect_hitl": true,
+  "expect_code": "OUT_OF_SCOPE"
+ },
+ {
+  "id": 29,
+  "q": "面积多大",
+  "expect_hitl": true,
+  "expect_code": "AMBIGUOUS_METRIC"
+ },
+ {
+  "id": 30,
+  "q": "优化一下这个流程",
+  "expect_hitl": true,
+  "expect_code": "UNDEFINED_TERM"
+ },
+ {
+  "id": 31,
+  "q": "nangate45 gcd 这次 run 的 setup tns 是多少",
+  "expect_source": [
+   "run_nangate45_gcd/6_finish.rpt",
+   "run_nangate45_gcd/6_report.log"
+  ]
+ },
+ {
+  "id": 32,
+  "q": "gcd 这次运行的 setup wns 和 worst slack",
+  "expect_source": [
+   "run_nangate45_gcd/6_finish.rpt",
+   "run_nangate45_gcd/6_report.log"
+  ]
+ },
+ {
+  "id": 33,
+  "q": "ibex 的 tns 是多少",
+  "expect_hitl": true,
+  "expect_code": "RUN_OUT_OF_SCOPE"
+ },
+ {
+  "id": 34,
+  "q": "gcd 这次 run 的 detail route drc 违例数",
+  "expect_source": [
+   "run_nangate45_gcd/5_route_drc.rpt",
+   "run_nangate45_gcd/5_2_route.log",
+   "run_nangate45_gcd/6_finish.rpt"
+  ]
+ },
+ {
+  "id": 35,
+  "q": "gcd 这次 run 的 tns 是多少",
+  "expect_hitl": true,
+  "expect_code": "MISSING_CORNER",
+  "note": "报告里 setup 与 hold 各有一套 TNS，不指明就该停"
+ }
 ]

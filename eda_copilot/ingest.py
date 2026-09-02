@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """把 corpus/ 下的真实 OpenROAD 语料切成带元数据的块。
 
-语料两类：
-  corpus/orfs_scripts/*.tcl   ORFS 流程驱动脚本（真实源码）
-  corpus/openroad_docs/*.md   OpenROAD 各模块 README（真实文档）
+语料三类：
+  corpus/orfs_scripts/*.tcl        ORFS 流程驱动脚本（真实源码）
+  corpus/openroad_docs/*.md        OpenROAD 各模块 README（真实文档）
+  corpus/run_nangate45_gcd/*       **本人跑通的一次真实 RTL->GDSII 运行**的报告/日志/逐阶段 metric
+                                   （nangate45/gcd base，openroad/orfs 官方镜像，跑到 6_final.gds）
 
 切块策略按类型分开：
   .md   按 markdown 标题切，标题链保留进 metadata，便于给出处。
@@ -32,6 +34,22 @@ STAGE_BY_FILE = {
     "stt_README.md": "route", "pdn_README.md": "floorplan", "tap_README.md": "floorplan",
     "par_README.md": "flow", "odb_README.md": "flow", "gui_README.md": "flow",
 }
+
+
+# 本库目前只有这一次真实运行。护栏要靠它区分「问的是这次 run」还是「问的是别的设计」。
+RUN_ID = "nangate45/gcd base"
+
+_RUN_STAGE_PREFIX = [
+    ("1_", "synth"), ("2_", "floorplan"), ("3_", "place"),
+    ("4_", "cts"), ("5_", "route"), ("6_", "report"),
+]
+
+
+def _stage_from_run_name(name: str) -> str:
+    for pre, st in _RUN_STAGE_PREFIX:
+        if name.startswith(pre):
+            return st
+    return "other"
 
 
 def _split_md(text: str, max_chars: int = 1400):
@@ -84,7 +102,7 @@ def _split_tcl(text: str, max_lines: int = 40):
 
 def load_documents() -> list[Document]:
     docs: list[Document] = []
-    for sub, kind in (("orfs_scripts", "tcl"), ("openroad_docs", "doc")):
+    for sub, kind in (("orfs_scripts", "tcl"), ("openroad_docs", "doc"), ("run_nangate45_gcd", "run")):
         d = CORPUS / sub
         if not d.is_dir():
             continue
@@ -92,8 +110,14 @@ def load_documents() -> list[Document]:
             if not fp.is_file():
                 continue
             text = fp.read_text(encoding="utf-8", errors="replace")
-            stage = STAGE_BY_FILE.get(fp.name, "other")
+            stage = STAGE_BY_FILE.get(fp.name) or _stage_from_run_name(fp.name)
             rel = f"{sub}/{fp.name}"
+            if kind == "run":
+                for a, b, body in _split_tcl(text, max_lines=30):
+                    docs.append(Document(page_content=body, metadata={
+                        "source": rel, "kind": kind, "stage": stage,
+                        "run": RUN_ID, "lines": f"{a}-{b}"}))
+                continue
             if fp.suffix == ".md":
                 for head, body in _split_md(text):
                     docs.append(Document(page_content=body, metadata={

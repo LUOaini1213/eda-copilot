@@ -1,0 +1,73 @@
+[2026-09-02 08:48:41.756] [miter_logger] [info] MiterStrategy::run starting
+[2026-09-02 08:48:41.756] [miter_logger] [info] Collecting POs for design 0: gcd
+
+[2026-09-02 08:48:41.763] [miter_logger] [info] Collected 106 PIs for design 0
+
+[2026-09-02 08:48:41.763] [miter_logger] [info] Collected 88 POs for design 0
+
+[2026-09-02 08:48:41.763] [miter_logger] [info] design 0 PI summary by model/term (106 total terminals, 7 unique rows):
+| Model  | Term     | Count |
+|--------|----------|-------|
+| DFF_X1 | Q        |    35 |
+| DFF_X1 | QN       |    35 |
+| gcd    | req_msg  |    32 |
+| gcd    | clk      |     1 |
+| gcd    | req_val  |     1 |
+| gcd    | reset    |     1 |
+| gcd    | resp_rdy |     1 |
+
+[2026-09-02 08:48:41.763] [miter_logger] [info] design 0 PO summary by model/term (88 total terminals, 5 unique rows):
+| Model  | Term     | Count |
+|--------|----------|-------|
+| DFF_X1 | CK       |    35 |
+| DFF_X1 | D        |    35 |
+| gcd    | resp_msg |    16 |
+| gcd    | req_rdy  |     1 |
+| gcd    | resp_val |     1 |
+
+[2026-09-02 08:48:41.763] [miter_logger] [info] Collecting POs for design 1: gcd
+
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of common inputs: 106
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of diff0 inputs: 0
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of diff1 inputs: 0
+[2026-09-02 08:48:41.766] [miter_logger] [info] Collected 106 PIs for design 1
+
+[2026-09-02 08:48:41.766] [miter_logger] [info] Collected 88 POs for design 1
+
+[2026-09-02 08:48:41.766] [miter_logger] [info] design 1 PI summary by model/term (106 total terminals, 7 unique rows):
+| Model  | Term     | Count |
+|--------|----------|-------|
+| DFF_X1 | Q        |    35 |
+| DFF_X1 | QN       |    35 |
+| gcd    | req_msg  |    32 |
+| gcd    | clk      |     1 |
+| gcd    | req_val  |     1 |
+| gcd    | reset    |     1 |
+| gcd    | resp_rdy |     1 |
+
+[2026-09-02 08:48:41.766] [miter_logger] [info] design 1 PO summary by model/term (88 total terminals, 5 unique rows):
+| Model  | Term     | Count |
+|--------|----------|-------|
+| DFF_X1 | CK       |    35 |
+| DFF_X1 | D        |    35 |
+| gcd    | resp_msg |    16 |
+| gcd    | req_rdy  |     1 |
+| gcd    | resp_val |     1 |
+
+[2026-09-02 08:48:41.766] [miter_logger] [info] normalizeInputs: starting
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of common inputs: 106
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of diff0 inputs: 0
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of diff1 inputs: 0
+[2026-09-02 08:48:41.766] [miter_logger] [info] normalizeOutputs: starting
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of common outputs: 88
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of diff0 outputs: 0
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of diff1 outputs: 0
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of PIs in circuit 0: 106
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of PIs in circuit 1: 106
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of POs in circuit 0: 88
+[2026-09-02 08:48:41.766] [miter_logger] [info] size of POs in circuit 1: 88
+[2026-09-02 08:48:41.780] [miter_logger] [info] Building miter expression
+[2026-09-02 08:48:41.780] [miter_logger] [info] Finished building miter expression
+[2026-09-02 08:48:41.784] [miter_logger] [info] Starting solver
+[2026-09-02 08:48:41.878] [miter_logger] [info] SAT solver finished: UNSAT
+[2026-09-02 08:48:41.878] [miter_logger] [info] Circuits are IDENTICAL

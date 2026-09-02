@@ -5,9 +5,15 @@
   tfidf   字符 n-gram TF-IDF 余弦（sklearn），对中英混合与标识符更稳
   hybrid  上面两路的倒数排名融合（RRF）
 
-默认是 bm25，不是 hybrid。理由见 eval/results.json：在本语料的 20 条检索题上
-hybrid 的 Hit@5 与 bm25 打平（都是 19/20），MRR 反而更低（0.770 vs 0.789）。
-既然融合拿不出增益，就不默认开——多一个组件就多一处要解释的行为。
+默认选哪个是评测决定的，而且**结论翻过一次**：
+
+  语料只有脚本+文档时（20 题）：bm25 Hit@5 19/20 MRR 0.789，hybrid 19/20 MRR 0.770
+      -> 融合没增益，默认 bm25。
+  加入本人跑通的真实 run 产物后（23 题）：bm25 21/23 (0.913)，hybrid 22/23 (0.957)
+      -> 融合开始有增益，默认改回 hybrid。
+
+语料从同质（全是文档）变成异质（文档 + 报告 + 日志）之后，两路检索的互补性才体现出来。
+教训是：组件有没有用取决于语料，不能一次定终身，换语料必须重测。
 
 EDA 语料里全是 set_global_routing_layer_adjustment 这种蛇形标识符，
 默认按空格切词会把它当成一个不可再分的怪词。这里的分词器把标识符
@@ -54,7 +60,7 @@ class Hit:
 
 
 class Retriever:
-    def __init__(self, docs: list[Document], mode: str = "bm25"):
+    def __init__(self, docs: list[Document], mode: str = "hybrid"):
         assert mode in ("bm25", "tfidf", "hybrid")
         self.docs = docs
         self.mode = mode
@@ -84,7 +90,8 @@ class Retriever:
         order = sims.argsort()[::-1][:n]
         return [int(i) for i in order if sims[i] > 0]
 
-    def search(self, q: str, k: int = 5, stage: str | None = None) -> list[Hit]:
+    def search(self, q: str, k: int = 5, stage: str | None = None,
+               prefer_kind: str | None = None) -> list[Hit]:
         if self.mode == "bm25":
             ranks = {"bm25": self._bm25_rank(q)}
         elif self.mode == "tfidf":
@@ -103,6 +110,17 @@ class Retriever:
             for idx in list(fused):
                 if self.docs[idx].metadata.get("stage") == stage:
                     fused[idx] *= 1.25
+
+        # 意图路由：问「这次 run 的数值」时优先运行产物，问文档时优先文档。
+        # 需要这一层是因为语料变异质了——设计名（gcd/nangate45）出现在文件名和
+        # 流程配置里，却不出现在报告正文里，纯词法检索会被这些词带偏。
+        if prefer_kind:
+            for idx in list(fused):
+                m = self.docs[idx].metadata
+                if m.get("kind") == prefer_kind:
+                    fused[idx] *= 1.8
+                    if prefer_kind == "run" and m.get("stage") == "report":
+                        fused[idx] *= 1.5
 
         top = sorted(fused.items(), key=lambda kv: -kv[1])[:k]
         return [Hit(self.docs[i], s, "+".join(ranks)) for i, s in top]

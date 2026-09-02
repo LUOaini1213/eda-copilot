@@ -10,7 +10,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="EDA Copilot：OpenROAD 流程问答，口径不清就停下来问人")
     ap.add_argument("question", nargs="*")
     ap.add_argument("-k", type=int, default=4)
-    ap.add_argument("--mode", choices=["bm25", "tfidf", "hybrid"], default="bm25")
+    ap.add_argument("--mode", choices=["bm25", "tfidf", "hybrid"], default="hybrid")
     ap.add_argument("--force", action="store_true", help="消融模式：关掉停问护栏")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()

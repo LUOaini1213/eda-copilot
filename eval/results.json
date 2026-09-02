@@ -2,13 +2,13 @@
   "bm25": {
     "mode": "bm25",
     "k": 5,
-    "n_retrieval": 20,
-    "n_stop": 10,
-    "hit_at_k": "19/20",
-    "hit_rate": 0.95,
-    "mrr": 0.7892,
-    "stop_caught": "10/10",
-    "stop_code_correct": "10/10",
+    "n_retrieval": 23,
+    "n_stop": 12,
+    "hit_at_k": "21/23",
+    "hit_rate": 0.913,
+    "mrr": 0.6971,
+    "stop_caught": "12/12",
+    "stop_code_correct": "12/12",
     "retrieval_misses": [
       {
         "id": 16,
@@ -21,6 +21,19 @@
         "want": [
           "openroad_docs/odb_README.md"
         ]
+      },
+      {
+        "id": 32,
+        "q": "gcd 这次运行的 setup wns 和 worst slack",
+        "got": [
+          "orfs_scripts/report_metrics.tcl",
+          "openroad_docs/gui_README.md",
+          "openroad_docs/gui_README.md"
+        ],
+        "want": [
+          "run_nangate45_gcd/6_finish.rpt",
+          "run_nangate45_gcd/6_report.log"
+        ]
       }
     ],
     "stop_misses": []
@@ -28,13 +41,13 @@
   "tfidf": {
     "mode": "tfidf",
     "k": 5,
-    "n_retrieval": 20,
-    "n_stop": 10,
-    "hit_at_k": "18/20",
-    "hit_rate": 0.9,
-    "mrr": 0.7475,
-    "stop_caught": "10/10",
-    "stop_code_correct": "10/10",
+    "n_retrieval": 23,
+    "n_stop": 12,
+    "hit_at_k": "20/23",
+    "hit_rate": 0.8696,
+    "mrr": 0.679,
+    "stop_caught": "12/12",
+    "stop_code_correct": "12/12",
     "retrieval_misses": [
       {
         "id": 7,
@@ -59,6 +72,19 @@
         "want": [
           "openroad_docs/odb_README.md"
         ]
+      },
+      {
+        "id": 32,
+        "q": "gcd 这次运行的 setup wns 和 worst slack",
+        "got": [
+          "openroad_docs/gui_README.md",
+          "orfs_scripts/report_metrics.tcl",
+          "openroad_docs/gui_README.md"
+        ],
+        "want": [
+          "run_nangate45_gcd/6_finish.rpt",
+          "run_nangate45_gcd/6_report.log"
+        ]
       }
     ],
     "stop_misses": []
@@ -66,13 +92,13 @@
   "hybrid": {
     "mode": "hybrid",
     "k": 5,
-    "n_retrieval": 20,
-    "n_stop": 10,
-    "hit_at_k": "19/20",
-    "hit_rate": 0.95,
-    "mrr": 0.77,
-    "stop_caught": "10/10",
-    "stop_code_correct": "10/10",
+    "n_retrieval": 23,
+    "n_stop": 12,
+    "hit_at_k": "22/23",
+    "hit_rate": 0.9565,
+    "mrr": 0.6986,
+    "stop_caught": "12/12",
+    "stop_code_correct": "12/12",
     "retrieval_misses": [
       {
         "id": 16,
