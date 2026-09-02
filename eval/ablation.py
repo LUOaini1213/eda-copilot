@@ -83,7 +83,7 @@ def main() -> int:
             "该停的停住": f"0/{len(stop)}",
             "强行作答": f"{forced_answered}/{len(stop)}",
             "无提示猜测": f"{silent_guess}/{len(stop)}",
-            "对20题正常问答的回归": len(regressions),
+            f"对{len(keep)}题正常问答的回归": len(regressions),
         },
         "停问原因分布": dist,
         "危害分级": {h: sum(1 for r in rows if r["harm"] == h) for h in sorted({r["harm"] for r in rows})},
