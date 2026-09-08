@@ -17,8 +17,19 @@ def _load(name):
     return module
 
 
-SUMMARY_KEYS = ("mode", "k", "n_retrieval", "n_stop", "hit_at_k", "hit_rate", "mrr",
-                "stop_caught", "stop_code_correct")
+# Ordinal facts: these must reproduce exactly on any machine.
+EXACT_KEYS = ("mode", "k", "n_retrieval", "n_stop", "hit_at_k", "hit_rate",
+              "stop_caught", "stop_code_correct")
+# MRR is not in that list. It depends on the *order* within the top-5, and two
+# documents can sit 4e-5 apart in the fused score (case #32: ranks 4 and 5 are
+# 0.029080 vs 0.029040). A different BLAS build computes the TF-IDF cosines to
+# slightly different last bits, that pair swaps, and MRR moves by 1/4 - 1/5 over
+# 23 queries = 0.0022. CI on ubuntu-latest measured 0.7109 where this laptop
+# measures 0.7130. Ranking ties are broken by document index (see retrieve.py),
+# so what is left is genuine float noise, not an unstable sort. Whether the
+# right passage is retrieved at all does not move; where it lands inside the
+# top-5 can. So: hit rate exact, MRR to two decimals.
+MRR_TOLERANCE = 0.01
 
 
 class EvaluationReproduces(unittest.TestCase):
@@ -31,8 +42,10 @@ class EvaluationReproduces(unittest.TestCase):
         for mode in ("bm25", "tfidf", "hybrid"):
             with self.subTest(mode=mode):
                 fresh = self.run_eval.evaluate(mode)
-                for key in SUMMARY_KEYS:
+                for key in EXACT_KEYS:
                     self.assertEqual(fresh[key], self.committed[mode][key], key)
+                self.assertAlmostEqual(fresh["mrr"], self.committed[mode]["mrr"],
+                                       delta=MRR_TOLERANCE, msg="mrr")
                 self.assertEqual([m["id"] for m in fresh["retrieval_misses"]],
                                  [m["id"] for m in self.committed[mode]["retrieval_misses"]])
 

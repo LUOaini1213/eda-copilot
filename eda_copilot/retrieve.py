@@ -87,7 +87,9 @@ class Retriever:
 
     def _tfidf_rank(self, q: str, n: int = 50) -> list[int]:
         sims = cosine_similarity(self._vec.transform([q]), self._mat)[0]
-        order = sims.argsort()[::-1][:n]
+        # 并列时按文档下标定序：argsort 默认 quicksort 不稳定，同分文档的先后
+        # 会随 numpy / BLAS 构建而变，同一份语料在两台机器上排出两种顺序。
+        order = sorted(range(len(sims)), key=lambda i: (-sims[i], i))[:n]
         return [int(i) for i in order if sims[i] > 0]
 
     def search(self, q: str, k: int = 5, stage: str | None = None,
@@ -122,5 +124,6 @@ class Retriever:
                     if prefer_kind == "run" and m.get("stage") == "report":
                         fused[idx] *= 1.5
 
-        top = sorted(fused.items(), key=lambda kv: -kv[1])[:k]
+        # 同上：融合分相等时按文档下标定序，不依赖 dict 插入顺序
+        top = sorted(fused.items(), key=lambda kv: (-kv[1], kv[0]))[:k]
         return [Hit(self.docs[i], s, "+".join(ranks)) for i, s in top]
