@@ -22,7 +22,7 @@ from eda_copilot.guard import HITL_CODES      # noqa: E402
 
 HARM = {
     "OUT_OF_SCOPE":     "TOPIC_DRIFT",    # 问的主题根本不在库里，答什么都是答别的
-    "NO_RUN_DATA":      "FABRICATED_FACT",# 把文档里的示例数值当成你的实际结果
+    "RUN_OUT_OF_SCOPE": "FABRICATED_FACT",# 拿本库唯一那次 run 的数值当成你问的那次
     "RELATIVE_RUN":     "WRONG_TARGET",   # 指代对象错了
     "AMBIGUOUS_METRIC": "METRIC_GUESSED", # 猜了一套指标
     "MISSING_CORNER":   "METRIC_GUESSED", # 猜了 setup/hold——两者修复手段相反
@@ -31,16 +31,20 @@ HARM = {
 }
 
 
-def main() -> int:
+def compute() -> dict:
     cases = json.loads((ROOT / "eval" / "cases.json").read_text(encoding="utf-8"))
     stop = [c for c in cases if c.get("expect_hitl")]
     keep = [c for c in cases if not c.get("expect_hitl")]
 
-    base_stop = sum(1 for c in stop if ask(c["q"])["hitl"])
+    a_runs = [ask(c["q"]) for c in stop]
+    base_stop = sum(1 for r in a_runs if r["hitl"])
+    base_silent = sum(1 for r in a_runs if (not r["hitl"]) and r["hits"])
 
-    rows, forced_answered, silent_guess = [], 0, 0
+    rows, forced_answered, silent_guess, b_stopped = [], 0, 0, 0
     for c in stop:
         r = ask(c["q"], force=True)
+        if r["hitl"]:
+            b_stopped += 1
         answered = bool(r["hits"])
         guesses = r.get("guesses") or []
         code = r.get("hitl_code") or ""
@@ -78,9 +82,9 @@ def main() -> int:
 
     result = {
         "n_stop_cases": len(stop), "n_answer_cases": len(keep),
-        "A_护栏开": {"该停的停住": f"{base_stop}/{len(stop)}", "静默错答": 0},
+        "A_护栏开": {"该停的停住": f"{base_stop}/{len(stop)}", "静默错答": base_silent},
         "B_护栏关": {
-            "该停的停住": f"0/{len(stop)}",
+            "该停的停住": f"{b_stopped}/{len(stop)}",
             "强行作答": f"{forced_answered}/{len(stop)}",
             "无提示猜测": f"{silent_guess}/{len(stop)}",
             f"对{len(keep)}题正常问答的回归": len(regressions),
@@ -90,9 +94,27 @@ def main() -> int:
         "rows": rows,
         "regressions": regressions,
     }
-    (ROOT / "eval" / "ablation.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps({k: v for k, v in result.items() if k not in ("rows", "regressions")},
-                     ensure_ascii=False, indent=2))
+    return result
+
+
+def summary(result: dict) -> dict:
+    return {k: v for k, v in result.items() if k not in ("rows", "regressions")}
+
+
+def main(argv=None) -> int:
+    """Write eval/ablation.json, or with --check compare a fresh run against it."""
+    argv = sys.argv[1:] if argv is None else argv
+    result = compute()
+    out = ROOT / "eval" / "ablation.json"
+    if "--check" in argv:
+        committed = json.loads(out.read_text(encoding="utf-8"))
+        same = (summary(result) == summary(committed)
+                and [r["harm"] for r in result["rows"]] == [r["harm"] for r in committed["rows"]])
+        print("ok: eval/ablation.json matches a fresh run" if same
+              else "DRIFT: eval/ablation.json differs from a fresh run")
+        return 0 if same else 1
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(summary(result), ensure_ascii=False, indent=2))
     return 0
 
 

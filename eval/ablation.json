@@ -75,9 +75,9 @@
     }
   },
   "危害分级": {
+    "FABRICATED_FACT": 2,
     "METRIC_GUESSED": 4,
     "TOPIC_DRIFT": 4,
-    "UNKNOWN": 2,
     "WRONG_TARGET": 2
   },
   "rows": [
@@ -103,7 +103,7 @@
       "q": "我的设计 WNS 是多少",
       "code": "RUN_OUT_OF_SCOPE",
       "code_zh": "运行不在库内",
-      "harm": "UNKNOWN",
+      "harm": "FABRICATED_FACT",
       "guesses": [
         "RUN_OUT_OF_SCOPE: 拿本库唯一那次 run 的数值当成你问的那次",
         "MISSING_CORNER: 默认按 setup 答"
@@ -267,7 +267,7 @@
       "q": "ibex 的 tns 是多少",
       "code": "RUN_OUT_OF_SCOPE",
       "code_zh": "运行不在库内",
-      "harm": "UNKNOWN",
+      "harm": "FABRICATED_FACT",
       "guesses": [
         "RUN_OUT_OF_SCOPE: 拿本库唯一那次 run 的数值当成你问的那次",
         "MISSING_CORNER: 默认按 setup 答"

@@ -1,5 +1,19 @@
 # EDA Copilot
 
+[![ci](https://github.com/LUOaini1213/eda-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/LUOaini1213/eda-copilot/actions/workflows/ci.yml)
+
+**In one paragraph (EN)** — a question-answering system over the real scripts and
+module docs of an open-source digital back-end flow (OpenROAD / ORFS), plus the
+reports, logs and per-stage metrics of one RTL→GDSII run I executed myself
+(nangate45/gcd, 986 instances, 284 s of wall-clock across 19 stage logs). Answers
+are retrieved passages with citations down to file and line. The part that
+matters: when a question lacks the premise that decides the answer — setup or
+hold? WNS or TNS? *which* run? — the system **stops and asks** with one of 7
+structured reason codes instead of guessing. 23 retrieval cases: Hit@5 22/23;
+12 stop cases: 12/12 stopped with the right code; with the guard off, all 12 are
+answered *with citations*, which is exactly why the guard exists. Offline, no
+model, no key.
+
 在开源数字后端流程（OpenROAD / ORFS）的**真实脚本与文档**上做的问答系统。
 一句话进来，只回答语料支撑得住的问题；**口径不清、超出语料、或需要本库根本没有的运行结果时，停下来问人，不猜**。
 
@@ -11,7 +25,22 @@ python -m venv .venv && .venv/Scripts/pip install -r requirements.txt
 python -m eda_copilot.cli "cts 的 sink clustering 是干什么的"
 python eval/run_eval.py      # 检索评测 + 停问评测
 python eval/ablation.py      # 关掉护栏的对照实验
+python -m unittest discover -s tests -v   # 护栏逐条断言 + 评测产物与新跑一致（CI）
 ```
+
+一个带出处的回答，和一次停问：
+
+```text
+$ python -m eda_copilot.cli "本次 run 的 setup tns 是多少"
+[停下来问人 · 运行不在库内] 本库只收录了 **nangate45/gcd base** 这一次真实运行（跑到 6_final.gds）。要问数值，请指明是这次运行；别的设计本库没有数据。
+
+$ python -m eda_copilot.cli "时序好不好"
+[停下来问人 · 双口径歧义] 时序至少有 WNS / TNS / worst slack 三套；面积至少有 die area / core area / utilization 三套。请指定。
+```
+
+![Final layout of the nangate45/gcd run rendered by OpenROAD: placement, routing and the clock tree of all 986 instances](run_artifacts/final_all.webp)
+
+*语料所依据的那次运行：`openroad/orfs` 官方镜像，nangate45/gcd，986 个实例，19 个阶段日志累计 284 s。更多版面图（拥塞、IR drop、最差路径）在 `run_artifacts/`。*
 
 ---
 
@@ -43,7 +72,13 @@ EDA 流程问答有一个特别的失败模式：**问题看起来有答案，�
 `6_final.gds`。复现见 `scripts/run_orfs_flow.sh`，版面图在 `run_artifacts/`。
 关键结果：**TNS(setup) = −7.18，WNS(setup) = −0.16**，实例数 986，利用率 0.880。
 
-切块后 **1215 块**，平均 438 字符。
+**从自己产出的报告里读出的三条结论**（文件与行号可直接核对）：
+
+1. **违例是全局的，不是单条路径的。**`6_report.json` 第 30 行 `finish__timing__setup__tns = −7.18`，`6_finish.rpt` 里 WNS(setup) = −0.16，比值约 45——违例摊在几十条路径上，只修最差那条没用。
+2. **为修时序插的 buffer 已占标准单元面积 18.7%，时序仍未收敛。**`6_report.json` 第 16–17 行：`timing_repair_buffer` 184 个、176.89 µm²；第 55 行标准单元实例面积 947.758 µm²，176.89 / 947.758 = 18.7%。
+3. **报告正文和结构化指标对同一个量给出不同精度。**`6_finish.rpt` 第 31 行印的是 `0.00 setup skew`，`6_report.json` 第 36 行 `finish__clock__skew__setup = 0.000896484`。看报告正文会以为 skew 为零，看指标才知道是 0.9 ps 量级。
+
+切块后 **1215 块**，平均 785 字符（`eda_copilot.ingest` 统计；加入运行产物前是 438）。
 `.md` 按标题切并保留标题链，`.tcl` 按语义段切并**保留起止行号**——所以出处能精确到
 `orfs_scripts/cts.tcl :: 18-27`。
 
@@ -83,7 +118,7 @@ README 里还写了「多一个组件就多一处要解释的行为」。
 
 **加入真实运行产物之后，同一个组件反过来了**：语料从同质（全是文档）
 变成异质（文档 + 报告 + 日志 + metric JSON），两路检索的互补性才体现出来，
-hybrid 反超（Hit@5 0.9565 vs 0.913），默认改回 hybrid。
+hybrid 反超（Hit@5 0.9565 vs 0.913），默认改回 hybrid。翻转前的那组数在提交 `5ddddcf` 的 `eval/results.json` 里，可回查。
 （注意 MRR 上 bm25 仍略高 0.7188 vs 0.7130——**两个指标不一致时按 Hit@5 选**，
 因为本系统给用户看的是 top-k 证据列表，不是只看第一条。这个取舍写在这里，不藏。）
 
@@ -134,10 +169,12 @@ setup 和 hold 各报一套 TNS，不指明问哪个本来就该停。
 
 | 危害 | 数量 | 含义 |
 |---|---|---|
-| `TOPIC_DRIFT` | 4 | 问的主题不在库里，答的是别的东西 |
-| `METRIC_GUESSED` | 3 | 猜了一套指标（含猜 setup/hold——修复手段相反） |
-| `WRONG_TARGET` | 2 | 指代/阶段错了 |
-| `FABRICATED_FACT` | 1 | 把文档里的内容当成你的实际运行结果 |
+| `TOPIC_DRIFT` | 4 | 问的主题不在库里，答的是别的东西（`OUT_OF_SCOPE` 2 + `UNDEFINED_TERM` 2） |
+| `METRIC_GUESSED` | 4 | 猜了一套指标（`AMBIGUOUS_METRIC` 2）或猜了 setup/hold（`MISSING_CORNER` 2——修复手段相反） |
+| `WRONG_TARGET` | 2 | 指代/阶段错了（`RELATIVE_RUN` 1 + `MISSING_STAGE` 1） |
+| `FABRICATED_FACT` | 2 | 拿本库唯一那次 run 的数值当成你问的那次（`RUN_OUT_OF_SCOPE` 2） |
+
+数字直接来自 `eval/ablation.json`（`python eval/ablation.py --check` 会把一次新跑与它比对，CI 每次都跑）。此前这张表写的是 4 / 3 / 2 / 1：`ablation.py` 里 `RUN_OUT_OF_SCOPE` 的映射键写错，两条本该记为 `FABRICATED_FACT` 的题落成了 `UNKNOWN`，2026-09-03 修正。
 
 **最值得看的一条：**关掉护栏后，「DRAM 的字线和位线怎么布」「晶圆图的缺陷模式怎么分类」
 「帮我看看」「优化一下这个流程」**全都返回了 `tap_README.md`（tapcell 文档）并给出出处**。
@@ -170,8 +207,8 @@ setup 和 hold 各报一套 TNS，不指明问哪个本来就该停。
   这不是谦虚，是它真的没有那个数据。
 - 回答由**检索到的原文片段 + 出处**组装，默认**不接大模型生成**。
   接大模型是可选项，关掉时系统完整可用。
-- 检索评测的 20 条期望出处是**我自己标的**，不是公开基准。
-- 停问的 10 条用例也是我自己设计的，覆盖 7 类原因码中的 6 类。
+- 检索评测的 23 条期望出处是**我自己标的**，不是公开基准。
+- 停问的 12 条用例也是我自己设计的，7 类原因码全部覆盖；停问「12/12 判对」的金标同样是本人标的。
 
 ## 7. 结构
 
@@ -183,9 +220,12 @@ eda_copilot/
   answer.py     编排：先过护栏，再检索，组装带出处的回答
   cli.py        命令行
 eval/
-  cases.json    30 条用例（20 检索 + 10 停问）
+  cases.json    35 条用例（23 检索 + 12 停问）
   run_eval.py   Hit@k / MRR / 停问准确率，三种检索器各跑一遍
   ablation.py   关掉护栏的对照实验 + 危害分级
+tests/
+  test_guard.py               12 条停问逐条断言原因码；23 条文档题不得被拦；force 模式必带出处与猜测记录
+  test_eval_reproduces.py     eval/results.json 与 eval/ablation.json 必须等于一次新跑
 scripts/
   run_orfs_flow.sh   在 WSL2 用官方镜像跑一次真实 RTL->GDSII 并拷出产物
 corpus/         77 个真实文件（31 脚本+文档，46 本人运行产物）

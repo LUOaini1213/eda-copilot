@@ -1,0 +1,27 @@
+name: ci
+
+# Offline: the corpus is committed, retrieval is lexical, no model and no key.
+# The suite asserts every guard case, re-runs the retrieval evaluation and the
+# ablation, and fails if the committed eval/*.json no longer match a fresh run.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Tests
+        run: python -m unittest discover -s tests -v
+      - name: Retrieval + guard evaluation
+        run: python eval/run_eval.py
+      - name: Ablation artifact matches a fresh run
+        run: python eval/ablation.py --check
