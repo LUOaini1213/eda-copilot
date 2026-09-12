@@ -41,7 +41,8 @@ def ask(question: str, k: int = 4, mode: str = "hybrid", force: bool = False) ->
 
     # guard 已经判过这是「问本次 run 的数值」还是「问文档」，直接复用，不重复判一遍
     prefer = "run" if any(n.startswith("run=") for n in it.notes) else None
-    hits = _retriever(mode).search(question, k=k, stage=it.stage, prefer_kind=prefer)
+    hits = _retriever(mode).search(question, k=k, stage=it.stage, prefer_kind=prefer,
+                                  allow_unmatched=force)
     out["hits"] = [{"cite": h.cite, "stage": h.doc.metadata.get("stage"),
                     "kind": h.doc.metadata.get("kind"), "score": round(h.score, 5),
                     "text": h.doc.page_content} for h in hits]

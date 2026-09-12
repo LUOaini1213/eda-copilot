@@ -162,16 +162,16 @@
       "harm": "WRONG_TARGET",
       "guesses": [
         "RELATIVE_RUN: 假定指最后一个阶段",
+        "RUN_OUT_OF_SCOPE: 拿本库唯一那次 run 的数值当成你问的那次",
         "UNDEFINED_TERM: 丢弃无口径修饰词，退回全库检索"
       ],
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
         "cts",
-        "report",
-        "route"
+        "report"
       ],
-      "top_cite": "run_nangate45_gcd/4_cts_final.rpt :: 23-31",
+      "top_cite": "run_nangate45_gcd/6_finish.rpt :: 23-31",
       "note": "带出处地答了一个本不该答的问题"
     },
     {

@@ -49,10 +49,10 @@ class EvaluationReproduces(unittest.TestCase):
                 self.assertEqual([m["id"] for m in fresh["retrieval_misses"]],
                                  [m["id"] for m in self.committed[mode]["retrieval_misses"]])
 
-    def test_hybrid_is_the_default_because_it_wins_on_hit_at_5(self):
+    def test_default_retains_the_best_hit_at_5_with_a_tied_baseline(self):
         h, b = self.committed["hybrid"], self.committed["bm25"]
         self.assertEqual(h["hit_at_k"], "22/23")
-        self.assertGreater(h["hit_rate"], b["hit_rate"])
+        self.assertEqual(h["hit_rate"], b["hit_rate"])
         self.assertEqual((h["stop_caught"], h["stop_code_correct"]), ("12/12", "12/12"))
 
     def test_ablation_artifact_matches_a_fresh_run(self):

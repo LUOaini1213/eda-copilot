@@ -5,12 +5,14 @@
   tfidf   字符 n-gram TF-IDF 余弦（sklearn），对中英混合与标识符更稳
   hybrid  上面两路的倒数排名融合（RRF）
 
-默认选哪个是评测决定的，而且**结论翻过一次**：
+检索效果随语料和运行意图路由一起变化：
 
   语料只有脚本+文档时（20 题）：bm25 Hit@5 19/20 MRR 0.789，hybrid 19/20 MRR 0.770
       -> 融合没增益，默认 bm25。
   加入本人跑通的真实 run 产物后（23 题）：bm25 21/23 (0.913)，hybrid 22/23 (0.957)
       -> 融合开始有增益，默认改回 hybrid。
+  2026-09-12 修复运行身份识别、补全运行意图路由并过滤零分候选后：
+      bm25 / hybrid 都是 22/23；hybrid 继续作为兼容默认，不再声称优于 bm25。
 
 语料从同质（全是文档）变成异质（文档 + 报告 + 日志）之后，两路检索的互补性才体现出来。
 教训是：组件有没有用取决于语料，不能一次定终身，换语料必须重测。
@@ -77,11 +79,14 @@ class Retriever:
         m = d.metadata
         return (m.get("source"), m.get("lines") or m.get("section"), d.page_content)
 
-    def _bm25_rank(self, q: str) -> list[int]:
+    def _bm25_rank(self, q: str, allow_unmatched: bool = False) -> list[int]:
+        # BM25 returns top-k documents even when every score is zero. RRF would
+        # turn those arbitrary ranks into positive scores and fabricate evidence.
+        scores = self._bm25.vectorizer.get_scores(tokenize(q))
         out = []
         for d in self._bm25.invoke(q):
             i = self._index.get(self._key(d))
-            if i is not None:
+            if i is not None and (allow_unmatched or scores[i] > 0):
                 out.append(i)
         return out
 
@@ -93,13 +98,13 @@ class Retriever:
         return [int(i) for i in order if sims[i] > 0]
 
     def search(self, q: str, k: int = 5, stage: str | None = None,
-               prefer_kind: str | None = None) -> list[Hit]:
+               prefer_kind: str | None = None, allow_unmatched: bool = False) -> list[Hit]:
         if self.mode == "bm25":
-            ranks = {"bm25": self._bm25_rank(q)}
+            ranks = {"bm25": self._bm25_rank(q, allow_unmatched=allow_unmatched)}
         elif self.mode == "tfidf":
             ranks = {"tfidf": self._tfidf_rank(q)}
         else:
-            ranks = {"bm25": self._bm25_rank(q), "tfidf": self._tfidf_rank(q)}
+            ranks = {"bm25": self._bm25_rank(q, allow_unmatched=allow_unmatched), "tfidf": self._tfidf_rank(q)}
 
         # 倒数排名融合
         fused: dict[int, float] = {}

@@ -71,8 +71,39 @@ _NEEDS_RUN = re.compile(
     r"(wns|tns|slack|skew|drc|面积|利用率)\s*(是)?\s*多少|"
     r"跑出来|实际(结果|数值)|report 里(写|是)什么", re.I)
 
-# 本库唯一收录的运行
-KNOWN_RUN = re.compile(r"gcd|nangate45", re.I)
+# 本库唯一收录的运行。gcd 是这个语料库的简称；显式给出的工艺、设计、
+# 变体必须同时匹配，不能因为任一名称碰巧出现就借用这次运行的数值。
+KNOWN_RUN = re.compile(r"(?<![\w.-])gcd(?![\w.-])", re.I)
+_IDENT = r"[a-z][a-z0-9_.-]*"
+_RUN_PATH = re.compile(rf"(?<![\w.-])({_IDENT})\s*/\s*({_IDENT})(?:\s*/\s*({_IDENT}))?", re.I)
+_METRIC_PAIRS = {("setup", "hold"), ("hold", "setup"), ("wns", "tns"), ("tns", "wns")}
+_PLATFORM = re.compile(r"\b(?:sky\d+[\w.-]*|asap\d+[\w.-]*|nangate\d+[\w.-]*|gf\d+[\w.-]*|ihp[\w.-]*|tsmc\d+[\w.-]*)\b", re.I)
+_RUN_REFERENCE = re.compile(r"\brun\b|这次运行|本次运行|这次跑", re.I)
+
+
+def _known_run(question: str) -> bool:
+    if not KNOWN_RUN.search(question):
+        return False
+    for platform, design, variant in _RUN_PATH.findall(question.lower()):
+        if (platform, design) in _METRIC_PAIRS and not variant:
+            continue
+        if (platform, design) != ("nangate45", "gcd") or variant not in ("", "base"):
+            return False
+    if any(p.lower() != "nangate45" for p in _PLATFORM.findall(question)):
+        return False
+    # Also recognize whitespace-qualified identities, including unseen PDK names.
+    for qualifier in re.findall(rf"\b({_IDENT})\s+gcd\b", question, re.I):
+        if qualifier.lower() not in {"nangate45", "run", "design", "the", "for", "of"}:
+            return False
+    for label, value in re.findall(
+            rf"\b(platform|pdk|design|variant|run_id)\s*[:=]\s*({_IDENT})", question, re.I):
+        expected = {"platform": "nangate45", "pdk": "nangate45", "design": "gcd",
+                    "variant": "base", "run_id": "base"}[label.lower()]
+        if value.lower() != expected:
+            return False
+    return True
+
+
 # 明显是别的设计
 OTHER_DESIGN = re.compile(r"我的设计|我这个设计|aes|ibex|jpeg|swerv|ariane|riscv|black\s*parrot|asap7", re.I)
 
@@ -126,8 +157,8 @@ def parse(question: str, force: bool = False) -> Intent:
 
     # 问具体数值：本库有且只有 nangate45/gcd base 这一次运行。
     # 问的是这次 -> 可以答；问的是别的设计 / 没指明是哪次 -> 停。
-    if _NEEDS_RUN.search(q):
-        if OTHER_DESIGN.search(q) or not KNOWN_RUN.search(q):
+    if _NEEDS_RUN.search(q) or (not doc_q and _RUN_REFERENCE.search(q)):
+        if OTHER_DESIGN.search(q) or not _known_run(q):
             if guard("RUN_OUT_OF_SCOPE",
                      "本库只收录了 **nangate45/gcd base** 这一次真实运行（跑到 6_final.gds）。"
                      "要问数值，请指明是这次运行；别的设计本库没有数据。"):
