@@ -111,9 +111,7 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "place",
-        "report",
-        "route"
+        "report"
       ],
       "top_cite": "run_nangate45_gcd/6_finish.rpt :: 2-10",
       "note": "带出处地答了一个本不该答的问题"
@@ -188,10 +186,9 @@
       "cited_stages": [
         "flow",
         "place",
-        "report",
-        "route"
+        "report"
       ],
-      "top_cite": "openroad_docs/par_README.md :: the extra_delay_cut is introduced for each cut hyperedge　>　TritonPart with slack progagation",
+      "top_cite": "orfs_scripts/report_metrics.tcl :: 24-34",
       "note": "带出处地答了一个本不该答的问题"
     },
     {
@@ -293,9 +290,9 @@
       "answered": true,
       "n_hits": 4,
       "cited_stages": [
-        "place",
-        "report",
-        "route"
+        "cts",
+        "floorplan",
+        "report"
       ],
       "top_cite": "run_nangate45_gcd/6_finish.rpt :: 2-10",
       "note": "带出处地答了一个本不该答的问题"

@@ -16,11 +16,11 @@ from .retrieve import Retriever
 
 
 @lru_cache(maxsize=4)
-def _retriever(mode: str = "hybrid") -> Retriever:
+def _retriever(mode: str = "bm25") -> Retriever:
     return Retriever(load_documents(), mode=mode)
 
 
-def ask(question: str, k: int = 4, mode: str = "hybrid", force: bool = False) -> dict:
+def ask(question: str, k: int = 4, mode: str = "bm25", force: bool = False) -> dict:
     it = parse(question, force=force)
     out: dict = {
         "question": question,
