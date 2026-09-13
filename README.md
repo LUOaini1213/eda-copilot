@@ -27,9 +27,11 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\Activate.ps1
 python -m eda_copilot.cli "cts 的 sink clustering 是干什么的"
-python eval/run_eval.py      # 检索评测 + 停问评测
-python eval/ablation.py      # 关掉护栏的对照实验
-python -m unittest discover -s tests -v   # 护栏逐条断言 + 评测产物与新跑一致（CI）
+python eval/run_eval.py      # 检索评测 + 停问评测，写回 eval/results.json
+python eval/ablation.py      # 关掉护栏的对照实验，写回 eval/ablation.json
+python eval/run_eval.py --check   # 只比对：新跑对不上已提交的产物就退出码 1（CI）
+python eval/ablation.py --check   # 同上（CI）
+python -m unittest discover -s tests -v   # 护栏逐条断言 + 产物与 README 数字回算（CI）
 ```
 
 macOS / Linux：创建环境后运行 `source .venv/bin/activate`，再运行

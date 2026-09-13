@@ -21,7 +21,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Tests
         run: python -m unittest discover -s tests -v
-      - name: Retrieval + guard evaluation
-        run: python eval/run_eval.py
+      - name: Retrieval + guard evaluation matches a fresh run
+        run: python eval/run_eval.py --check
       - name: Ablation artifact matches a fresh run
         run: python eval/ablation.py --check
