@@ -1,12 +1,18 @@
 name: ci
 
 # Offline: the corpus is committed, retrieval is lexical, no model and no key.
-# The suite asserts every guard case, re-runs the retrieval evaluation and the
-# ablation, and fails if the committed eval/*.json no longer match a fresh run.
+# The suite asserts every guard case, recomputes every number in README.md, and
+# fails if the committed eval/*.json no longer match a fresh run.
 
 on:
   push:
   pull_request:
+  # A push-only badge says "this passed on the day of the last push". The claim
+  # worth making is "clone it today and it still runs", so re-run it weekly with
+  # the pinned requirements. If a pin ever stops installing, this is how we find
+  # out -- from a red badge rather than from a reader whose clone will not start.
+  schedule:
+    - cron: "0 3 * * 1"
 
 jobs:
   tests:
