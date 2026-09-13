@@ -53,7 +53,7 @@ def evaluate(mode: str, k: int = 5) -> dict:
     }
 
 
-# 序数事实必须逐位相同；MRR 只到 0.01，理由见 README §5 和 tests/test_eval_reproduces.py
+# 序数事实必须逐位相同；MRR 只到 0.01，理由见 README §4.1 与 tests/test_eval_reproduces.py
 # （换一套 BLAS，TF-IDF 余弦的末位不同，同分的两篇会换位，MRR 摊到 23 题动 0.0022）。
 EXACT_KEYS = ("mode", "k", "n_retrieval", "n_stop", "hit_at_k", "hit_rate",
               "stop_caught", "stop_code_correct")
