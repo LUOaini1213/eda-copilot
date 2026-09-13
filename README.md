@@ -245,6 +245,9 @@ gcd 的面积，还带着行号。
   这不是谦虚，是它真的没有那个数据。
 - `gcd` 是本库唯一运行的简称；显式写出其他工艺、设计或运行变体时不能沿用这个简称。
   例如 `sky130/gcd 的 setup tns 是多少` 会停问；建议使用完整的 `nangate45/gcd/base`。
+  这条口径由 [`tests/test_evidence_boundaries.py`](tests/test_evidence_boundaries.py) 钉住：
+  8 个伪造运行身份 x 2 种问法共 16 次断言，必须全部 `RUN_OUT_OF_SCOPE` 且不返回任何出处。
+  这组回归**不在**我自己标的那 35 条用例里，是专门用来回答「你的评测是不是自己给自己出题」的。
 - BM25 / TF-IDF 都没有正相关候选时返回 `NO_EVIDENCE`；这只是词法证据门槛，
   不是语义正确性的保证。`--force` 消融模式显式关闭护栏与此证据门槛。
 - 回答由**检索到的原文片段 + 出处**组装，**不接大模型生成**：`eda_copilot/` 里
@@ -263,11 +266,16 @@ eda_copilot/
   cli.py        命令行
 eval/
   cases.json    35 条用例（23 检索 + 12 停问）
-  run_eval.py   Hit@k / MRR / 停问准确率，三种检索器各跑一遍
-  ablation.py   关掉护栏的对照实验 + 危害分级
+  run_eval.py   Hit@k / MRR / 停问准确率，三种检索器各跑一遍；`--check` 与已提交产物比对
+  ablation.py   关掉护栏的对照实验 + 危害分级；`--check` 与已提交产物比对
 tests/
   test_guard.py               12 条停问逐条断言原因码；23 条文档题不得被拦；force 模式必带出处与猜测记录
   test_eval_reproduces.py     eval/results.json 与 eval/ablation.json 必须等于一次新跑
+  test_evidence_boundaries.py 跳出自标用例集的回归：8 个伪造 run 身份 x 2 种问法必须 RUN_OUT_OF_SCOPE；
+                              三种检索模式下无词法证据必须 NO_EVIDENCE
+  test_readme_numbers.py      本 README 里的每个数字，都必须能从语料与 eval 产物当场回算出来
+docs/
+  PRD.md        一页 PRD：验收标准、v1 与当前状态快照、不做的取舍
 scripts/
   run_orfs_flow.sh   在 WSL2 用官方镜像跑一次真实 RTL->GDSII 并拷出产物
 corpus/         77 个真实文件（31 脚本+文档，46 本人运行产物）
