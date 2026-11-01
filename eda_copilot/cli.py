@@ -6,13 +6,19 @@ import argparse, json, sys
 from .answer import ask
 
 
-def main() -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The command line, as a value, so the tests can assert what it exposes."""
     ap = argparse.ArgumentParser(description="EDA Copilot：OpenROAD 流程问答，口径不清就停下来问人")
     ap.add_argument("question", nargs="*")
     ap.add_argument("-k", type=int, default=4)
-    ap.add_argument("--mode", choices=["bm25", "tfidf", "hybrid"], default="hybrid")
+    ap.add_argument("--mode", choices=["bm25", "tfidf", "hybrid"], default="bm25")
     ap.add_argument("--force", action="store_true", help="消融模式：关掉停问护栏")
     ap.add_argument("--json", action="store_true")
+    return ap
+
+
+def main() -> int:
+    ap = build_parser()
     a = ap.parse_args()
     q = " ".join(a.question).strip()
     if not q:

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """编排：先过护栏，过不了就停下来问人；过得了才检索并组装带出处的回答。
 
-默认**不接大模型**：回答由检索到的原文片段 + 出处组装而成，离线、零 token、可复现。
-接大模型是可选项（--llm），仅在显式打开且有 API key 时启用；关掉时系统仍完整可用。
+**不接大模型**：回答由检索到的原文片段 + 出处组装而成，离线、零 token、可复现。
+本包里没有任何模型调用，也不读 API key——没有可打开的生成开关。
 这样做的原因和 malaysia-auto-ask 一致：先把「答得对不对、该不该答」这层做扎实，
 生成只是最后一层皮。
 """
@@ -16,11 +16,11 @@ from .retrieve import Retriever
 
 
 @lru_cache(maxsize=4)
-def _retriever(mode: str = "hybrid") -> Retriever:
+def _retriever(mode: str = "bm25") -> Retriever:
     return Retriever(load_documents(), mode=mode)
 
 
-def ask(question: str, k: int = 4, mode: str = "hybrid", force: bool = False) -> dict:
+def ask(question: str, k: int = 4, mode: str = "bm25", force: bool = False) -> dict:
     it = parse(question, force=force)
     out: dict = {
         "question": question,

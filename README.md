@@ -18,7 +18,7 @@ model, no key.
 一句话进来，只回答语料支撑得住的问题；**口径不清、超出语料、或需要本库根本没有的运行结果时，停下来问人，不猜**。
 
 语料里包含**本人跑通的一次真实 RTL→GDSII 运行**的报告、日志与逐阶段结构化指标。
-离线运行，**零 token、零费用**，不接大模型也完整可用。
+离线运行，**零 token、零费用**，全程不接大模型。
 
 Windows / PowerShell（后续命令均在激活后的虚拟环境内执行）：
 
@@ -27,9 +27,11 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\Activate.ps1
 python -m eda_copilot.cli "cts 的 sink clustering 是干什么的"
-python eval/run_eval.py      # 检索评测 + 停问评测
-python eval/ablation.py      # 关掉护栏的对照实验
-python -m unittest discover -s tests -v   # 护栏逐条断言 + 评测产物与新跑一致（CI）
+python eval/run_eval.py      # 检索评测 + 停问评测，写回 eval/results.json
+python eval/ablation.py      # 关掉护栏的对照实验，写回 eval/ablation.json
+python eval/run_eval.py --check   # 只比对：新跑对不上已提交的产物就退出码 1（CI）
+python eval/ablation.py --check   # 同上（CI）
+python -m unittest discover -s tests -v   # 护栏逐条断言 + 产物与 README 数字回算（CI）
 ```
 
 macOS / Linux：创建环境后运行 `source .venv/bin/activate`，再运行
@@ -115,26 +117,34 @@ EDA 流程问答有一个特别的失败模式：**问题看起来有答案，�
 
 | 检索器 | Hit@5 | Hit Rate | MRR |
 |---|---|---|---|
-| **hybrid（默认）** | **22/23** | **0.9565** | **0.7746** |
-| bm25 | 22/23 | 0.9565 | 0.7841 |
+| **bm25（默认）** | **22/23** | **0.9565** | **0.7841** |
+| hybrid | 22/23 | 0.9565 | 0.7746 |
 | tfidf | 21/23 | 0.9130 | 0.7514 |
 
 这组结果于 2026-09-12 重跑，题目和金标未变。修复了运行身份校验、
 补全带 `run / 这次运行` 的结果意图路由，并过滤 BM25 的零相关候选。
-BM25 与 hybrid 的 Hit@5 现在持平，BM25 的 MRR 略高。
-hybrid 保留为兼容默认；当前这组结果不支持“融合比 BM25 更好”的说法。
 
-**这里的结论翻转过一次，值得单独说。**
+**默认检索器由此退回 bm25。**两者的 Hit@5 已经打平（都是 22/23）；MRR 上 bm25 高
+0.0095，但本仓对 MRR 声明的复现容差就是 0.01（见下面「早期 CI 也暴露了跨平台差异」：
+换一套 BLAS，同一份代码算出的 hybrid MRR 在 0.7130 与 0.7109 之间摆动），
+所以这 0.0095 也不足以反过来说
+「bm25 更好」。两个方向都拿不出增益——而 [`docs/PRD.md`](docs/PRD.md) 的验收标准第 5
+条写的是「额外组件必须在评测上拿出增益，否则**不进默认路径**」。融合就是那个额外
+组件，于是它退出默认路径。三档检索器仍可用 `--mode` 切换，评测每次三档都跑。
 
-语料只有脚本 + 文档时（20 题），bm25 Hit@5 19/20、MRR **0.789**，
-hybrid 19/20、MRR **0.770**——融合拿不出增益，我据此把默认设成了 bm25，
-README 里还写了「多一个组件就多一处要解释的行为」。
+**这个默认值改过两次，两次都是评测改的；两组历史数都留在下面，没有只留最后那个。**
 
-**以下是修复前的历史对照。**加入真实运行产物之后，语料从同质（全是文档）
-变成异质（文档 + 报告 + 日志 + metric JSON），两路检索的互补性才体现出来，
-hybrid 反超（Hit@5 0.9565 vs 0.913），默认改回 hybrid。翻转前的那组数在提交 `5ddddcf` 的 `eval/results.json` 里，可回查。
-（注意 MRR 上 bm25 仍略高 0.7188 vs 0.7130——**两个指标不一致时按 Hit@5 选**，
+语料只有脚本 + 文档时（20 题），bm25 Hit@5 19/20、MRR **0.7892**，
+hybrid 19/20、MRR **0.7700**（提交 `5ddddcf` 的 `eval/results.json`，可回查）——
+融合拿不出增益，默认设成 bm25，当时写的理由是「多一个组件就多一处要解释的行为」。
+
+加入真实运行产物之后，语料从同质（全是文档）变成异质（文档 + 报告 + 日志 +
+metric JSON），两路检索的互补性开始体现，hybrid 在 Hit@5 上反超
+（22/23 vs 21/23，提交 `d2e3e4e`），默认改成 hybrid。
+（注意 MRR 上 bm25 当时就仍略高 0.7188 vs 0.7130——**两个指标不一致时按 Hit@5 选**，
 因为本系统给用户看的是 top-k 证据列表，不是只看第一条。这个取舍写在这里，不藏。）
+修好运行身份校验与结果意图路由后（提交 `dc105bf`），bm25 的 Hit@5 追平到 22/23，
+那次反超随之消失——于是按同一条第 5 条，默认再退回 bm25。
 
 > 组件有没有用**取决于语料，不能一次定终身**。换了语料就得重测。
 
@@ -149,6 +159,16 @@ MRR 相应动 1/4 − 1/5 摊到 23 题 = 0.0022。顺带发现排序本身也�
 **「可复现」这四个字，得说清楚复现的是哪一部分。**
 > 我把翻转前后的两组数都留在这里，而不是只留下最后那个好看的。
 
+**这一层原来只盖到 `eval/*.json`。**CI 会验证产物等于一次新跑，但 README 上这些
+数字全是手抄的——抄错了照样全绿，而 README 才是别人唯一会读的那一层。
+现在 [`tests/test_readme_numbers.py`](tests/test_readme_numbers.py) 把本文里的每个数
+都当场回算一遍：§4.1 三行表格对 `eval/results.json`、§4.3 两张表对 `eval/ablation.json`、
+1215 块 / 平均 785 字符对一次真的 `ingest`、16/15/46/77 对 `corpus/` 下的文件数、
+986 实例 / 19 份阶段日志 / 284 s 对 `6_report.json` 与日志里的 `Elapsed time`、
+§2 三条结论里的每个数（含 18.7% 和它引的行号）对 `6_report.json`，
+连 §4.3 引的那两条出处也要对得上 `ablation.json` 里记的 `top_cite`。
+对不上就红。顺手把「README 提到的 `--` 开关必须真的存在」也钉进去了。
+
 **还有一处是意图路由。**加入运行产物后 `#31 #32`（问本次 run 的 TNS/WNS）
 一开始检索不到——因为设计名 `gcd` / `nangate45` 出现在文件名和流程配置里，
 **却不出现在报告正文里**，纯词法检索被这些词带偏。
@@ -162,7 +182,7 @@ MRR 相应动 1/4 − 1/5 摊到 23 题 = 0.0022。顺带发现排序本身也�
 `6_finish.rpt :: 2-10`（正是 `tns max -7.18` 那一段），MRR 从 0.699 提到 0.713。
 **这是删语料噪声，不是删难题。**
 
-默认 hybrid 未命中的 1 题：`#16 odb 数据库怎么读写`，三种检索器都没把 `odb_README.md` 排进 top-5，
+默认 bm25 未命中的 1 题：`#16 odb 数据库怎么读写`，三种检索器都没把 `odb_README.md` 排进 top-5，
 被 `flow.tcl` 里大量出现的 `odb` 字样淹掉。**如实记录，未做针对性修补。**
 
 ### 4.2 停问（12 题）
@@ -201,9 +221,14 @@ setup 和 hold 各报一套 TNS，不指明问哪个本来就该停。
 数字直接来自 `eval/ablation.json`（`python eval/ablation.py --check` 会把一次新跑与它比对，CI 每次都跑）。此前这张表写的是 4 / 3 / 2 / 1：`ablation.py` 里 `RUN_OUT_OF_SCOPE` 的映射键写错，两条本该记为 `FABRICATED_FACT` 的题落成了 `UNKNOWN`，2026-09-03 修正。
 
 **最值得看的一条：**关掉护栏后，「DRAM 的字线和位线怎么布」「晶圆图的缺陷模式怎么分类」
-「帮我看看」「优化一下这个流程」**全都返回了 `tap_README.md`（tapcell 文档）并给出出处**。
-而「我的设计 WNS 是多少」返回了 `report_metrics.tcl`——**看起来完全正确，实际上完全错误**，
-因为本库只有 nangate45/gcd base 的运行结果，没有用户所问的那次设计的数据。
+「帮我看看」「优化一下这个流程」**四题的 top-1 出处是同一段**——
+`run_nangate45_gcd/6_report.log :: 61-71`，也就是本次运行的面积汇总
+（那一段的正文是 `Design area 948 um^2 88% utilization`）。问 DRAM 阵列，答的是这颗
+gcd 的面积，还带着行号。
+而「我的设计 WNS 是多少」返回 `run_nangate45_gcd/6_finish.rpt :: 2-10`，
+那一段的正文就是 `tns max -7.18` / `wns max -0.16`——**看起来完全正确，实际上完全错误**，
+因为那是本库唯一那次 nangate45/gcd base 的数，不是提问者那次设计的数。
+这十二条的出处逐条记在 `eval/ablation.json` 的 `top_cite` 字段里。
 
 > **带出处的错答比裸奔的错答更危险。**出处让人停止怀疑。
 > 这是我做这个项目最想说的一句话。
@@ -231,10 +256,13 @@ setup 和 hold 各报一套 TNS，不指明问哪个本来就该停。
   这不是谦虚，是它真的没有那个数据。
 - `gcd` 是本库唯一运行的简称；显式写出其他工艺、设计或运行变体时不能沿用这个简称。
   例如 `sky130/gcd 的 setup tns 是多少` 会停问；建议使用完整的 `nangate45/gcd/base`。
+  这条口径由 [`tests/test_evidence_boundaries.py`](tests/test_evidence_boundaries.py) 钉住：
+  8 个伪造运行身份 x 2 种问法共 16 次断言，必须全部 `RUN_OUT_OF_SCOPE` 且不返回任何出处。
+  这组回归**不在**我自己标的那 35 条用例里，是专门用来回答「你的评测是不是自己给自己出题」的。
 - BM25 / TF-IDF 都没有正相关候选时返回 `NO_EVIDENCE`；这只是词法证据门槛，
   不是语义正确性的保证。`--force` 消融模式显式关闭护栏与此证据门槛。
-- 回答由**检索到的原文片段 + 出处**组装，默认**不接大模型生成**。
-  接大模型是可选项，关掉时系统完整可用。
+- 回答由**检索到的原文片段 + 出处**组装，**不接大模型生成**：`eda_copilot/` 里
+  没有任何模型调用，也不读 API key，因此不存在可以打开的生成开关。
 - 检索评测的 23 条期望出处是**我自己标的**，不是公开基准。
 - 停问的 12 条用例也是我自己设计的，7 类原因码全部覆盖；停问「12/12 判对」的金标同样是本人标的。
 
@@ -249,11 +277,16 @@ eda_copilot/
   cli.py        命令行
 eval/
   cases.json    35 条用例（23 检索 + 12 停问）
-  run_eval.py   Hit@k / MRR / 停问准确率，三种检索器各跑一遍
-  ablation.py   关掉护栏的对照实验 + 危害分级
+  run_eval.py   Hit@k / MRR / 停问准确率，三种检索器各跑一遍；`--check` 与已提交产物比对
+  ablation.py   关掉护栏的对照实验 + 危害分级；`--check` 与已提交产物比对
 tests/
   test_guard.py               12 条停问逐条断言原因码；23 条文档题不得被拦；force 模式必带出处与猜测记录
   test_eval_reproduces.py     eval/results.json 与 eval/ablation.json 必须等于一次新跑
+  test_evidence_boundaries.py 跳出自标用例集的回归：8 个伪造 run 身份 x 2 种问法必须 RUN_OUT_OF_SCOPE；
+                              三种检索模式下无词法证据必须 NO_EVIDENCE
+  test_readme_numbers.py      本 README 里的每个数字，都必须能从语料与 eval 产物当场回算出来
+docs/
+  PRD.md        一页 PRD：验收标准、v1 与当前状态快照、不做的取舍
 scripts/
   run_orfs_flow.sh   在 WSL2 用官方镜像跑一次真实 RTL->GDSII 并拷出产物
 corpus/         77 个真实文件（31 脚本+文档，46 本人运行产物）

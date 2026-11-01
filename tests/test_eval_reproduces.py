@@ -4,10 +4,14 @@ import importlib.util
 import json
 import sys
 import unittest
+from inspect import signature
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+
+from eda_copilot.answer import ask  # noqa: E402
+from eda_copilot.cli import build_parser  # noqa: E402
 
 
 def _load(name):
@@ -49,11 +53,23 @@ class EvaluationReproduces(unittest.TestCase):
                 self.assertEqual([m["id"] for m in fresh["retrieval_misses"]],
                                  [m["id"] for m in self.committed[mode]["retrieval_misses"]])
 
-    def test_default_retains_the_best_hit_at_5_with_a_tied_baseline(self):
-        h, b = self.committed["hybrid"], self.committed["bm25"]
-        self.assertEqual(h["hit_at_k"], "22/23")
-        self.assertEqual(h["hit_rate"], b["hit_rate"])
-        self.assertEqual((h["stop_caught"], h["stop_code_correct"]), ("12/12", "12/12"))
+    def test_the_default_path_carries_no_component_that_failed_to_show_a_gain(self):
+        """PRD acceptance criterion 5, asserted instead of merely written down.
+
+        Fusion (hybrid) is the extra component. It ties bm25 on Hit@5 and its
+        MRR sits within MRR_TOLERANCE of bm25's, so on what this repository can
+        actually measure it shows no gain -- and therefore must not sit on the
+        default path. The default is bm25, the path without the component.
+        """
+        b, h = self.committed["bm25"], self.committed["hybrid"]
+        self.assertEqual((b["hit_at_k"], h["hit_at_k"]), ("22/23", "22/23"))
+        self.assertEqual(b["hit_rate"], h["hit_rate"])
+        self.assertLess(abs(b["mrr"] - h["mrr"]), MRR_TOLERANCE,
+                        "fusion would have to beat bm25 by more than the declared "
+                        "MRR tolerance before it could claim a gain")
+        self.assertEqual((b["stop_caught"], b["stop_code_correct"]), ("12/12", "12/12"))
+        self.assertEqual(signature(ask).parameters["mode"].default, "bm25")
+        self.assertEqual(build_parser().get_default("mode"), "bm25")
 
     def test_ablation_artifact_matches_a_fresh_run(self):
         ablation = _load("ablation")
