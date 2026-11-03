@@ -12,8 +12,8 @@
   加入本人跑通的真实 run 产物后（23 题，d2e3e4e）：bm25 21/23 (0.913)，
       hybrid 22/23 (0.9565) -> 融合在 Hit@5 上有增益，默认改成 hybrid。
   2026-09-12 修复运行身份识别、补全运行意图路由并过滤零分候选后（dc105bf）：
-      bm25 / hybrid 都是 22/23，MRR 0.7841 vs 0.7746，差 0.0095 小于本仓对 MRR
-      声明的 0.01 容差 -> 增益消失，按 PRD 验收标准第 5 条默认退回 bm25。
+      bm25 / hybrid 都是 22/23，hybrid 的 MRR 更低（0.7746 vs 0.7841）
+      -> 融合拿不出增益，按 PRD 验收标准第 5 条默认退回 bm25。
 
 语料从同质（全是文档）变成异质（文档 + 报告 + 日志）之后，两路检索的互补性才体现出来。
 教训是：组件有没有用取决于语料，不能一次定终身，换语料必须重测。
@@ -99,7 +99,8 @@ class Retriever:
         return [int(i) for i in order if sims[i] > 0]
 
     def search(self, q: str, k: int = 5, stage: str | None = None,
-               prefer_kind: str | None = None, allow_unmatched: bool = False) -> list[Hit]:
+               prefer_kind: str | None = None, allow_unmatched: bool = False,
+               exclude_kind: str | None = None) -> list[Hit]:
         if self.mode == "bm25":
             ranks = {"bm25": self._bm25_rank(q, allow_unmatched=allow_unmatched)}
         elif self.mode == "tfidf":
@@ -129,6 +130,11 @@ class Retriever:
                     fused[idx] *= 1.8
                     if prefer_kind == "run" and m.get("stage") == "report":
                         fused[idx] *= 1.5
+
+        # 问题点名了别的设计时，gcd 的运行产物不能当证据（见 guard 的 exclude=run）
+        if exclude_kind:
+            fused = {i: s for i, s in fused.items()
+                     if self.docs[i].metadata.get("kind") != exclude_kind}
 
         # 同上：融合分相等时按文档下标定序，不依赖 dict 插入顺序
         top = sorted(fused.items(), key=lambda kv: (-kv[1], kv[0]))[:k]

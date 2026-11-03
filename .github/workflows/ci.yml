@@ -16,8 +16,16 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    # Windows too: the README's first commands are PowerShell, and the corpus
+    # citations carry line numbers that must not shift with line endings.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    env:
+      PYTHONIOENCODING: utf-8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,3 +39,5 @@ jobs:
         run: python eval/run_eval.py --check
       - name: Ablation artifact matches a fresh run
         run: python eval/ablation.py --check
+      - name: Held-out probes match the committed run
+        run: python eval/heldout.py --check
