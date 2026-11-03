@@ -30,6 +30,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from eda_copilot.answer import ask  # noqa: E402
 from eda_copilot.cli import build_parser  # noqa: E402
 from eda_copilot.guard import HITL_CODES  # noqa: E402
 from eda_copilot.ingest import load_documents  # noqa: E402
@@ -48,6 +49,17 @@ MINUS = "−"
 
 # Flags that appear in README but belong to eval/*.py, not to the CLI.
 NON_CLI_FLAGS = {"--check"}
+
+HELDOUT = json.loads((ROOT / "eval" / "heldout.json").read_text(encoding="utf-8"))
+
+
+def ablation_module():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ablation", ROOT / "eval" / "ablation.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 
 ELAPSED = re.compile(r"Elapsed time: (\d+):(\d+(?:\.\d+)?)")
 
@@ -108,11 +120,62 @@ class ReadmeNumbers(unittest.TestCase):
         marked = self.one(r"\|\s*\*{0,2}(bm25|hybrid|tfidf)（默认）")
         self.assertEqual(marked, build_parser().get_default("mode"))
 
-    def test_the_mrr_gap_the_readme_calls_too_small_to_choose_on_really_is(self):
-        gap = self.one(r"MRR 上 bm25 高\s*\n?([\d.]+)", float)
-        tolerance = self.one(r"复现容差就是 ([\d.]+)", float)
-        self.assertAlmostEqual(gap, RESULTS["bm25"]["mrr"] - RESULTS["hybrid"]["mrr"], places=4)
-        self.assertLess(gap, tolerance)
+    def test_the_default_retriever_rule_holds_on_the_committed_results(self):
+        # README: hybrid ties on Hit@5 and has the lower MRR, so it shows no gain
+        # and PRD #5 keeps bm25 as the default. Both halves must hold.
+        tied = self.one(r"hybrid 在 Hit@5 上打平（都是 (\d+/\d+)）")
+        hybrid_mrr, bm25_mrr = re.search(r"MRR 更低\s*\n?（([\d.]+) 对 ([\d.]+)）", README).groups()
+        self.assertEqual(tied, RESULTS["bm25"]["hit_at_k"])
+        self.assertEqual(tied, RESULTS["hybrid"]["hit_at_k"])
+        self.assertEqual(float(hybrid_mrr), RESULTS["hybrid"]["mrr"])
+        self.assertEqual(float(bm25_mrr), RESULTS["bm25"]["mrr"])
+        self.assertLess(RESULTS["hybrid"]["mrr"], RESULTS["bm25"]["mrr"])
+        self.assertNotIn("复现容差就是", README)
+
+    def test_the_first_screen_numbers(self):
+        stop = [c for c in CASES if c.get("expect_hitl")]
+        self.assertEqual(self.one(r"stops with one of (\d+) reason codes", int), len(HITL_CODES))
+        self.assertEqual(self.one(r"(\d+/\d+) stop cases stopped\s+with the right code"),
+                         RESULTS["bm25"]["stop_code_correct"])
+        hit, n = re.search(r"Hit@5 (\d+/\d+) on (\d+) retrieval cases", README).groups()
+        self.assertEqual(hit, RESULTS["bm25"]["hit_at_k"])
+        self.assertEqual(int(n), RESULTS["bm25"]["n_retrieval"])
+        self.assertEqual(self.one(r"with the guard off, all (\d+)\s+are answered", int), len(stop))
+        self.assertEqual(ABLATION["B_护栏关"]["强行作答"], f"{len(stop)}/{len(stop)}")
+        self.assertEqual(self.one(r"all (\d+) cases are author-written", int), len(CASES))
+
+    # ---- held-out probes ------------------------------------------------
+    def test_the_held_out_numbers_match_the_committed_run(self):
+        passed = HELDOUT["passed"]
+        n_pass, n_all = (int(x) for x in passed.split("/"))
+        self.assertEqual(self.one(r"guard change it\s+gets (\d+/\d+)"), passed)
+        self.assertEqual(self.one(r"\*\*留出探针：(\d+/\d+)。\*\*"), passed)
+        self.assertEqual(self.one(r"On (\d+) probes written after", int), n_all)
+        cited_wrong = [r["id"] for r in HELDOUT["rows"] if not r["pass"] and r["top_cite"]]
+        k, misses = re.search(r"(\d+) of the (\d+) misses cite the wrong passage", README).groups()
+        self.assertEqual((int(k), int(misses)), (len(cited_wrong), n_all - n_pass))
+        section = self.section("**留出探针：", "- 2026-11-03 的复审问题")
+        self.assertEqual(self.one(r"没过的 (\d+) 条", int, section), n_all - n_pass)
+        self.assertEqual(self.one(r"(\d+) 条带着错的出处作答", int, section), len(cited_wrong))
+        listed = re.findall(r"`(H\d+)`", section)
+        self.assertEqual(sorted(listed), sorted(HELDOUT["failed_ids"]))
+        for hid in cited_wrong:
+            self.assertIn(f"`{hid}`", section.split("1 条误拦")[0])
+
+    def test_the_chinese_glossary_the_readme_lists_is_the_one_in_the_code(self):
+        from eda_copilot.answer import ZH_TERMS
+        n, words = re.search(r"`ZH_TERMS` 只补了 (\d+) 个一对一的词（([^）]+)）", README).groups()
+        self.assertEqual(int(n), len(ZH_TERMS))
+        self.assertEqual(words.split("、"), [zh for zh, _ in ZH_TERMS])
+
+    # ---- the demo on the first screen -----------------------------------
+    def test_the_cli_demo_prints_what_the_code_prints(self):
+        demo = self.section("```text", "```\n\n![")
+        shown = re.findall(r'^\$ python -m eda_copilot\.cli "([^"]+)"\n(.+)$', demo, re.M)
+        self.assertGreaterEqual(len(shown), 3)
+        for question, first_line in shown:
+            with self.subTest(q=question):
+                self.assertEqual(ask(question)["answer"].splitlines()[0], first_line)
 
     # ---- 4.2 / 4.3 guard and ablation ------------------------------------
     def test_the_case_counts_match_eval_cases_json(self):
@@ -141,20 +204,32 @@ class ReadmeNumbers(unittest.TestCase):
         self.assertEqual(self.one(r"\|\s*强行作答\s*\|\s*—\s*\|\s*\*\*(\S+)\*\*\s*\|"),
                          b["强行作答"])
         silent_a, forced_b = re.search(
-            r"\|\s*无提示猜测\s*\|\s*(\d+)\s*\|\s*\*\*(\S+)\*\*\s*\|", README).groups()
+            r"\|\s*靠默认值猜测\s*\|\s*(\d+)\s*\|\s*\*\*(\S+)\*\*\s*\|", README).groups()
         self.assertEqual(int(silent_a), a["静默错答"])
-        self.assertEqual(forced_b, b["无提示猜测"])
+        self.assertEqual(forced_b, b["靠默认值猜测"])
+        self.assertNotIn("无提示猜测", README)
         n_answer, regressions = re.search(
             r"\|\s*对 (\d+) 题正常问答的回归\s*\|\s*—\s*\|\s*\*\*(\d+)\*\*\s*\|", README).groups()
         self.assertEqual(int(n_answer), ABLATION["n_answer_cases"])
         self.assertEqual(int(regressions), b["对23题正常问答的回归"])
 
     def test_the_harm_grades_match_the_committed_ablation(self):
-        table = self.section("**危害分级：**", "**最值得看的一条：**")
+        table = self.section("**危害分级", "**最值得看的一条：**")
         grades = {k: int(v) for k, v in re.findall(r"^\|\s*`([A-Z_]+)`\s*\|\s*(\d+)\s*\|",
                                                    table, re.M)}
         self.assertEqual(grades, ABLATION["危害分级"])
         self.assertEqual(sum(grades.values()), ABLATION["n_stop_cases"])
+
+    def test_the_harm_grade_is_a_relabelling_of_the_reason_code_as_the_readme_says(self):
+        self.assertIn("按原因码预先指定，不是逐条判定", README)
+        harm = ablation_module().HARM
+        for row in ABLATION["rows"]:
+            with self.subTest(id=row["id"]):
+                self.assertEqual(row["harm"], harm[row["code"]])
+        rows = {r["id"]: r for r in ABLATION["rows"]}
+        cite = self.one(r"引用的\s*\n?`([^`]+)` 正好就是 gcd 的 setup TNS")
+        self.assertEqual(rows[35]["top_cite"], cite)
+        self.assertIn("tns max", cited_passage(cite))
 
     def test_the_forced_mode_citations_quoted_in_the_readme_come_from_the_artifact(self):
         rows = {r["q"]: r for r in ABLATION["rows"]}
@@ -220,6 +295,8 @@ class ReadmeNumbers(unittest.TestCase):
         self.assertEqual(self.one(r"finish__timing__setup__tns = (.\d+\.\d+)", float),
                          round(tns, 2))
         self.assertEqual(self.one(r"比值约 (\d+)", int), round(tns / wns))
+        self.assertEqual(self.one(r"`finish__timing__drv__setup_violation_count = (\d+)`", int),
+                         REPORT["finish__timing__drv__setup_violation_count"])
         self.assertEqual(self.one(r"`timing_repair_buffer` (\d+) 个", int), buffers)
         self.assertEqual(self.one(r"个、([\d.]+) µm²", float), buffer_area)
         self.assertEqual(self.one(r"标准单元实例面积 ([\d.]+) µm²", float), stdcell_area)
@@ -239,11 +316,21 @@ class ReadmeNumbers(unittest.TestCase):
             17: "finish__design__instance__area__class:timing_repair_buffer",
             55: "947.758",
             36: "finish__clock__skew__setup",
+            44: "finish__timing__drv__setup_violation_count",
         }
+        self.assertEqual(self.one(r"同一份文件第 (\d+) 行直接记了", int), 44)
         for line, needle in cited.items():
             with self.subTest(line=line):
                 self.assertIn(needle, report[line - 1])
         self.assertIn("0.00 setup skew", finish[30])  # README: 6_finish.rpt 第 31 行
+
+    def test_the_openroad_build_the_readme_names_is_the_one_in_the_logs(self):
+        version = self.one(r"日志里记的是 `OpenROAD ([^`]+)`")
+        builds = set()
+        for log in RUN.glob("*.log"):
+            builds.update(re.findall(r"OpenROAD (\d+Q\d-\d+-g[0-9a-f]+)",
+                                     log.read_text(encoding="utf-8", errors="replace")))
+        self.assertEqual(builds, {version})
 
     # ---- the README must not document things the code does not have ------
     def test_every_cli_flag_the_readme_documents_actually_exists(self):

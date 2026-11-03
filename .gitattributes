@@ -1,0 +1,6 @@
+# Text stays LF everywhere so line-numbered citations (cts.tcl :: 18-27) and the
+# chunk statistics do not depend on the checkout platform.
+* text=auto eol=lf
+*.webp -text
+*.png -text
+*.gds -text
