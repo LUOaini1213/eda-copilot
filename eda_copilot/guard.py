@@ -22,6 +22,9 @@ STAGES = {
     "synth": ["synthesis", "yosys", "abc", "综合"],
     "resize": ["resize", "repair_timing", "buffer", "修时序"],
 }
+# 子串匹配会把 replace / global_place 也当成 place，所以单写的 place 要按词边界判。
+# 只在上面的子串都没命中时才用（floorplan 在 place 之前判，不会被它抢走）。
+_BARE_STAGE = {"place": re.compile(r"(?<![a-z_])place(?![a-z_])", re.I)}
 
 HITL_CODES = {
     "OUT_OF_SCOPE": ("库外主题", "本库只有开源数字后端流程（OpenROAD/ORFS）的脚本与模块文档，没有 DRAM 阵列 / 工艺 / 器件内容"),
@@ -68,7 +71,7 @@ _OUT_OF_SCOPE = re.compile(
 
 _NEEDS_RUN = re.compile(
     r"(我的|这个|本|该)?\s*(设计|design|run|跑的?)\s*.*(是多少|多少|结果|数值)|"
-    r"(wns|tns|slack|skew|drc|面积|利用率)\s*(是)?\s*多少|"
+    r"(wns|tns|slack|skew|drc|面积|利用率|实例数)\s*(是)?\s*多少|"
     r"跑出来|实际(结果|数值)|report 里(写|是)什么", re.I)
 
 # 本库唯一收录的运行。gcd 是这个语料库的简称；显式给出的工艺、设计、
@@ -107,6 +110,19 @@ def _known_run(question: str) -> bool:
 # 明显是别的设计
 OTHER_DESIGN = re.compile(r"我的设计|我这个设计|aes|ibex|jpeg|swerv|ariane|riscv|black\s*parrot|asap7", re.I)
 
+
+def _names_other_run(question: str) -> bool:
+    """问题里点名了别的设计或别的工艺（nangate45 之外的 PDK）。"""
+    if OTHER_DESIGN.search(question):
+        return True
+    return any(p.lower() != "nangate45" for p in _PLATFORM_NAME.findall(question))
+
+
+# 和 _PLATFORM 同一组 PDK 名，但边界只看 ASCII：中文紧贴着写（「在sky130上」）时
+# \b 不成立，_PLATFORM 会漏掉。
+_PLATFORM_NAME = re.compile(
+    r"(?<![A-Za-z0-9_])(sky\d+|asap\d+|nangate\d+|gf\d+|ihp[A-Za-z0-9]*|tsmc\d+)", re.I)
+
 _RELATIVE = re.compile(r"上次|上一次|最新的?那?个?\s*run|刚才那个|之前那个|last run|latest run", re.I)
 
 _UNDEFINED = re.compile(r"优化一下|怎么样|好不好|行不行|帮我看看|有没有问题|正不正常", re.I)
@@ -117,9 +133,19 @@ _UNDEFINED = re.compile(r"优化一下|怎么样|好不好|行不行|帮我看�
 _DOC_Q = re.compile(
     r"是什么|什么意思|怎么用|如何使用|干什么|作用是|定义|有哪些|哪些参数|哪些取值|"
     r"哪个命令|什么命令|怎么读写|怎么实现|用的什么|用什么算法|在哪个模块|"
-    r"会报(告)?哪些|支持哪些|为什么要|为什么放在|什么条件下|什么时候执行", re.I)
+    r"会报(告)?哪些|支持哪些|为什么要|为什么放在|什么条件下|什么时候执行|"
+    # 英文问法。只收「问命令 / 选项 / 用法」的句式；"what is the wns" 这种问数值的
+    # 不算文档题，仍要过 setup/hold 护栏。
+    r"\bwhat\s+does\b|\bhow\s+(?:to|do|does|can|should)\b|"
+    r"\bwhich\s+(?:command|option|parameter|flag|variable|argument|algorithm|module)s?\b|"
+    r"\bwhat\s+(?:commands|options|parameters|flags|arguments|algorithm)\b|"
+    r"\bwhat\s+is\s+(?:the\s+)?(?:purpose|meaning|definition|role)\b|"
+    r"\bwhat\s+is\s+[a-z]+_[a-z0-9_]+|\bexplain\b|\blist\s+(?:the|all|of)\b", re.I)
 
 _AMBIG_METRIC = re.compile(r"时序(好|怎么样|如何)|面积(多大|大不大)|性能(怎么样|好不好)|质量(怎么样|好不好)", re.I)
+# 「面积是多少」同样有 die / core / 实例 三套；带了限定词才不算歧义
+_AREA_VALUE = re.compile(r"面积\s*(是)?\s*多少|\barea\b.*\b(is|of)\b|what\s+is\s+the\s+area", re.I)
+_AREA_QUALIFIED = re.compile(r"die|core|instance|stdcell|std\s*cell|macro|实例|标准单元|单元|芯片|核心|管芯", re.I)
 
 _TIMING = re.compile(r"slack|wns|tns|时序|timing|建立|保持", re.I)
 _SETUP = re.compile(r"setup|建立时间|max\s*delay|path_delay\s*max", re.I)
@@ -155,17 +181,32 @@ def parse(question: str, force: bool = False) -> Intent:
         if guard("RELATIVE_RUN", "本库不保存运行历史。请直接说阶段与指标名。"):
             return it
 
+    run_refusal = ("本库只收录了 **nangate45/gcd base** 这一次真实运行（跑到 6_final.gds）。"
+                   "要问这次运行的数值，请在问题里写明 gcd（或 nangate45/gcd）；别的设计本库没有数据。")
+
+    # 点名了别的设计 / 工艺、又不是问文档：本库没有那次运行，gcd 的产物不能拿来顶替。
+    # 这一条必须在 _NEEDS_RUN 之前判——「ibex 的 cts 是怎么做的」不含数值词，
+    # 以前会漏过 _NEEDS_RUN，直接拿 gcd 的 4_1_cts.json 带出处作答。
+    other_run = _names_other_run(q)
+    if not doc_q and other_run:
+        if guard("RUN_OUT_OF_SCOPE", run_refusal):
+            return it
+    if doc_q and other_run:
+        # 文档与设计无关，可以答；但运行产物属于 gcd，不能当成别的设计的证据
+        it.notes.append("exclude=run")
+
     # 问具体数值：本库有且只有 nangate45/gcd base 这一次运行。
     # 问的是这次 -> 可以答；问的是别的设计 / 没指明是哪次 -> 停。
     if _NEEDS_RUN.search(q) or (not doc_q and _RUN_REFERENCE.search(q)):
-        if OTHER_DESIGN.search(q) or not _known_run(q):
-            if guard("RUN_OUT_OF_SCOPE",
-                     "本库只收录了 **nangate45/gcd base** 这一次真实运行（跑到 6_final.gds）。"
-                     "要问数值，请指明是这次运行；别的设计本库没有数据。"):
+        # force 模式下上面已经记过一次同样的猜测，这里不重复记账
+        already = not doc_q and other_run
+        if (other_run or not _known_run(q)) and not already:
+            if guard("RUN_OUT_OF_SCOPE", run_refusal):
                 return it
         it.notes.append("run=nangate45/gcd base")
 
-    if _AMBIG_METRIC.search(q):
+    if _AMBIG_METRIC.search(q) or (not doc_q and _AREA_VALUE.search(q)
+                                    and not _AREA_QUALIFIED.search(q)):
         if guard("AMBIGUOUS_METRIC", "时序至少有 WNS / TNS / worst slack 三套；面积至少有 die area / core area / utilization 三套。请指定。"):
             return it
 
@@ -178,6 +219,11 @@ def parse(question: str, force: bool = False) -> Intent:
         if any(k in low for k in kws):
             it.stage = st
             break
+    else:
+        for st, pat in _BARE_STAGE.items():
+            if pat.search(q):
+                it.stage = st
+                break
 
     # 下面两条只针对「问结果」的问题。问文档的不需要 corner，也不需要先说阶段。
     if not doc_q:
