@@ -1,0 +1,173 @@
+{
+  "passed": "14/20",
+  "failed_ids": [
+    "H6",
+    "H10",
+    "H12",
+    "H14",
+    "H17",
+    "H20"
+  ],
+  "rows": [
+    {
+      "id": "H1",
+      "q": "jpeg 设计的 setup wns 是多少",
+      "expect": "stop",
+      "pass": true,
+      "hitl_code": "RUN_OUT_OF_SCOPE",
+      "top_cite": null
+    },
+    {
+      "id": "H2",
+      "q": "swerv 的布线拥塞怎么样",
+      "expect": "stop",
+      "pass": true,
+      "hitl_code": "RUN_OUT_OF_SCOPE",
+      "top_cite": null
+    },
+    {
+      "id": "H3",
+      "q": "sky130hd 上 gcd 的 setup tns",
+      "expect": "stop",
+      "pass": true,
+      "hitl_code": "RUN_OUT_OF_SCOPE",
+      "top_cite": null
+    },
+    {
+      "id": "H4",
+      "q": "上一次跑的 drc 结果",
+      "expect": "stop",
+      "pass": true,
+      "hitl_code": "RELATIVE_RUN",
+      "top_cite": null
+    },
+    {
+      "id": "H5",
+      "q": "my design has negative slack, what should I do",
+      "expect": "stop",
+      "pass": true,
+      "hitl_code": "MISSING_CORNER",
+      "top_cite": null
+    },
+    {
+      "id": "H6",
+      "q": "DRAM sense amplifier 怎么设计",
+      "expect": "stop",
+      "pass": false,
+      "hitl_code": "MISSING_STAGE",
+      "top_cite": null
+    },
+    {
+      "id": "H7",
+      "q": "ariane 的 floorplan 利用率设多少合适",
+      "expect": "no_run_hits",
+      "pass": true,
+      "hitl_code": "RUN_OUT_OF_SCOPE",
+      "top_cite": null
+    },
+    {
+      "id": "H8",
+      "q": "what does global_placement do",
+      "expect": "answer",
+      "pass": true,
+      "hitl_code": "",
+      "top_cite": "orfs_scripts/global_place.tcl :: 60-69"
+    },
+    {
+      "id": "H9",
+      "q": "which option controls the target density in global placement",
+      "expect": "answer",
+      "pass": true,
+      "hitl_code": "",
+      "top_cite": "openroad_docs/gpl_README.md :: adds padding and gets global placement uniform target density"
+    },
+    {
+      "id": "H10",
+      "q": "how to run detailed placement",
+      "expect": "answer",
+      "pass": false,
+      "hitl_code": "",
+      "top_cite": "openroad_docs/gpl_README.md :: adds padding and gets global placement uniform target density"
+    },
+    {
+      "id": "H11",
+      "q": "时钟树综合用哪个命令",
+      "expect": "answer",
+      "pass": true,
+      "hitl_code": "",
+      "top_cite": "openroad_docs/cts_README.md :: Clock Tree Synthesis　>　Commands　>　Clock Tree Synthesis　>　Instance Name Prefixes"
+    },
+    {
+      "id": "H12",
+      "q": "repair_design 和 repair_timing 有什么区别",
+      "expect": "answer",
+      "pass": false,
+      "hitl_code": "MISSING_CORNER",
+      "top_cite": null
+    },
+    {
+      "id": "H13",
+      "q": "how do I reduce routing congestion",
+      "expect": "answer",
+      "pass": true,
+      "hitl_code": "",
+      "top_cite": "openroad_docs/grt_README.md :: Global Routing　>　Commands　>　Set Global Routing Layer Adjustment"
+    },
+    {
+      "id": "H14",
+      "q": "电源网络是怎么定义的",
+      "expect": "answer",
+      "pass": false,
+      "hitl_code": "NO_EVIDENCE",
+      "top_cite": null
+    },
+    {
+      "id": "H15",
+      "q": "gcd 的 hold tns 是多少",
+      "expect": "answer",
+      "pass": true,
+      "hitl_code": "",
+      "top_cite": "run_nangate45_gcd/6_report.json :: 31-60"
+    },
+    {
+      "id": "H16",
+      "q": "what is the hold slack of the gcd run",
+      "expect": "answer",
+      "pass": true,
+      "hitl_code": "",
+      "top_cite": "run_nangate45_gcd/6_report.json :: 31-60"
+    },
+    {
+      "id": "H17",
+      "q": "gcd 的 die area 是多少",
+      "expect": "answer",
+      "pass": false,
+      "hitl_code": "",
+      "top_cite": "orfs_scripts/floorplan.tcl :: 69-91"
+    },
+    {
+      "id": "H18",
+      "q": "what is the clock skew of the gcd run",
+      "expect": "answer",
+      "pass": true,
+      "hitl_code": "",
+      "top_cite": "run_nangate45_gcd/6_finish.rpt :: 23-31"
+    },
+    {
+      "id": "H19",
+      "q": "nangate45/gcd 的 drc 违例是多少",
+      "expect": "answer",
+      "pass": true,
+      "hitl_code": "",
+      "top_cite": "run_nangate45_gcd/5_2_route.log :: 415-429"
+    },
+    {
+      "id": "H20",
+      "q": "what is the setup tns of the gcd run",
+      "expect": "answer",
+      "pass": false,
+      "hitl_code": "",
+      "top_cite": "run_nangate45_gcd/2_1_floorplan.json :: 1-30"
+    }
+  ]
+}
