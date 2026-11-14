@@ -9,7 +9,7 @@
 # together with the bump.
 #
 # Their transitive dependencies (numpy / scipy and whatever BLAS they ship) are
-# not pinned. That is exactly the layer README section 4.1 measured at 4e-5 on the
+# not pinned. That is exactly the layer docs/HISTORY.md measured at 4e-5 on the
 # TF-IDF cosines, and the reason the tests hold MRR to 0.01 rather than to the
 # last digit. (`langchain` itself is not imported anywhere and is not listed.)
 langchain-core==1.6.1
