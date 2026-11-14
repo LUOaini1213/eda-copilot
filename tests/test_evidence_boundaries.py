@@ -124,6 +124,12 @@ class ReviewProbes(unittest.TestCase):
     def test_an_unqualified_area_is_ambiguous(self):
         self.assertStops("gcd 的面积是多少", "AMBIGUOUS_METRIC")
 
+    def test_a_qualified_die_area_is_not_ambiguous(self):
+        # 护栏让人「请指定 die / core / utilization」；指定了 die 就该放行并引到 Die area 那行
+        result = ask("gcd 的 die 面积是多少")
+        self.assertFalse(result["hitl"], result["hitl_code"])
+        self.assertIn("Die area:", _cited_text(result))
+
     def test_setup_numbers_of_gcd_still_come_from_the_finish_report(self):
         for q in ("gcd 的 setup tns 是多少", "what is the setup WNS of the gcd run"):
             with self.subTest(q=q):

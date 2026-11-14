@@ -177,6 +177,18 @@ class ReadmeNumbers(unittest.TestCase):
             with self.subTest(q=question):
                 self.assertEqual(ask(question)["answer"].splitlines()[0], first_line)
 
+    def test_the_lines_the_cli_demo_quotes_after_the_first_are_in_the_answer(self):
+        # 第一行之外，演示里摘出来的行（如 tns max -7.18）也要真在回答里，「...」是省略号
+        demo = self.section("```text", "```\n\n![")
+        blocks = re.findall(r'^\$ python -m eda_copilot\.cli "([^"]+)"\n(.*?)(?=^\$ |\Z)',
+                            demo, re.M | re.S)
+        quoted = [(q, ln) for q, body in blocks
+                  for ln in body.strip().splitlines()[1:] if ln.strip() not in ("", "...")]
+        self.assertTrue(quoted)
+        for question, line in quoted:
+            with self.subTest(q=question, line=line):
+                self.assertIn(line, ask(question)["answer"].splitlines())
+
     # ---- 4.2 / 4.3 guard and ablation ------------------------------------
     def test_the_case_counts_match_eval_cases_json(self):
         stop = [c for c in CASES if c.get("expect_hitl")]
